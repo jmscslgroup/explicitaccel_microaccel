@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.43
+// Model version                  : 6.51
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Thu Nov  3 22:38:09 2022
+// C/C++ source code generated on : Tue Nov  8 17:02:31 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -29,9 +29,13 @@ extern "C"
 #include <math.h>
 #include "rtwtypes.h"
 #include "explicitaccel_microaccel_types.h"
+#include "explicitaccel_microaccel_private.h"
 
 // Block signals (default storage)
 B_explicitaccel_microaccel_T explicitaccel_microaccel_B;
+
+// Continuous states
+X_explicitaccel_microaccel_T explicitaccel_microaccel_X;
 
 // Block states (default storage)
 DW_explicitaccel_microaccel_T explicitaccel_microaccel_DW;
@@ -42,394 +46,122 @@ RT_MODEL_explicitaccel_microa_T explicitaccel_microaccel_M_ =
 RT_MODEL_explicitaccel_microa_T *const explicitaccel_microaccel_M =
   &explicitaccel_microaccel_M_;
 
+//
+// This function updates continuous states using the ODE3 fixed-step
+// solver algorithm
+//
+static void rt_ertODEUpdateContinuousStates(RTWSolverInfo *si )
+{
+  // Solver Matrices
+  static const real_T rt_ODE3_A[3] = {
+    1.0/2.0, 3.0/4.0, 1.0
+  };
+
+  static const real_T rt_ODE3_B[3][3] = {
+    { 1.0/2.0, 0.0, 0.0 },
+
+    { 0.0, 3.0/4.0, 0.0 },
+
+    { 2.0/9.0, 1.0/3.0, 4.0/9.0 }
+  };
+
+  time_T t = rtsiGetT(si);
+  time_T tnew = rtsiGetSolverStopTime(si);
+  time_T h = rtsiGetStepSize(si);
+  real_T *x = rtsiGetContStates(si);
+  ODE3_IntgData *id = static_cast<ODE3_IntgData *>(rtsiGetSolverData(si));
+  real_T *y = id->y;
+  real_T *f0 = id->f[0];
+  real_T *f1 = id->f[1];
+  real_T *f2 = id->f[2];
+  real_T hB[3];
+  int_T i;
+  int_T nXc = 1;
+  rtsiSetSimTimeStep(si,MINOR_TIME_STEP);
+
+  // Save the state values at time t in y, we'll use x as ynew.
+  (void) memcpy(y, x,
+                static_cast<uint_T>(nXc)*sizeof(real_T));
+
+  // Assumes that rtsiSetT and ModelOutputs are up-to-date
+  // f0 = f(t,y)
+  rtsiSetdX(si, f0);
+  explicitaccel_microaccel_derivatives();
+
+  // f(:,2) = feval(odefile, t + hA(1), y + f*hB(:,1), args(:)(*));
+  hB[0] = h * rt_ODE3_B[0][0];
+  for (i = 0; i < nXc; i++) {
+    x[i] = y[i] + (f0[i]*hB[0]);
+  }
+
+  rtsiSetT(si, t + h*rt_ODE3_A[0]);
+  rtsiSetdX(si, f1);
+  explicitaccel_microaccel_step();
+  explicitaccel_microaccel_derivatives();
+
+  // f(:,3) = feval(odefile, t + hA(2), y + f*hB(:,2), args(:)(*));
+  for (i = 0; i <= 1; i++) {
+    hB[i] = h * rt_ODE3_B[1][i];
+  }
+
+  for (i = 0; i < nXc; i++) {
+    x[i] = y[i] + (f0[i]*hB[0] + f1[i]*hB[1]);
+  }
+
+  rtsiSetT(si, t + h*rt_ODE3_A[1]);
+  rtsiSetdX(si, f2);
+  explicitaccel_microaccel_step();
+  explicitaccel_microaccel_derivatives();
+
+  // tnew = t + hA(3);
+  // ynew = y + f*hB(:,3);
+  for (i = 0; i <= 2; i++) {
+    hB[i] = h * rt_ODE3_B[2][i];
+  }
+
+  for (i = 0; i < nXc; i++) {
+    x[i] = y[i] + (f0[i]*hB[0] + f1[i]*hB[1] + f2[i]*hB[2]);
+  }
+
+  rtsiSetT(si, tnew);
+  rtsiSetSimTimeStep(si,MAJOR_TIME_STEP);
+}
+
 // Model step function
 void explicitaccel_microaccel_step(void)
 {
   SL_Bus_explicitaccel_microaccel_std_msgs_Bool rtb_BusAssignment6;
-  SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment2;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment3;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment4;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment7;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment8;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment9;
-  real_T u1;
+  real_T rtb_v_des;
+  real_T rtb_v_des_dot;
   int32_T i;
   boolean_T b_varargout_1;
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+    // set solver stop time
+    rtsiSetSolverStopTime(&explicitaccel_microaccel_M->solverInfo,
+                          ((explicitaccel_microaccel_M->Timing.clockTick0+1)*
+      explicitaccel_microaccel_M->Timing.stepSize0));
+  }                                    // end MajorTimeStep
 
-  // Outputs for Atomic SubSystem: '<S1>/Subscribe8'
-  // MATLABSystem: '<S26>/SourceBlock'
-  b_varargout_1 = Sub_explicitaccel_microaccel_559.getLatestMessage
-    (&explicitaccel_microaccel_B.b_varargout_2);
-
-  // Outputs for Enabled SubSystem: '<S26>/Enabled Subsystem' incorporates:
-  //   EnablePort: '<S30>/Enable'
-
-  if (b_varargout_1) {
-    // SignalConversion generated from: '<S30>/In1'
-    explicitaccel_microaccel_B.In1 = explicitaccel_microaccel_B.b_varargout_2;
-  }
-
-  // End of MATLABSystem: '<S26>/SourceBlock'
-  // End of Outputs for SubSystem: '<S26>/Enabled Subsystem'
-  // End of Outputs for SubSystem: '<S1>/Subscribe8'
-
-  // Outputs for Atomic SubSystem: '<S1>/Subscribe4'
-  // MATLABSystem: '<S24>/SourceBlock'
-  b_varargout_1 = Sub_explicitaccel_microaccel_624.getLatestMessage
-    (&explicitaccel_microaccel_B.b_varargout_2);
-
-  // Outputs for Enabled SubSystem: '<S24>/Enabled Subsystem' incorporates:
-  //   EnablePort: '<S28>/Enable'
-
-  if (b_varargout_1) {
-    // SignalConversion generated from: '<S28>/In1'
-    explicitaccel_microaccel_B.In1_n = explicitaccel_microaccel_B.b_varargout_2;
-  }
-
-  // End of MATLABSystem: '<S24>/SourceBlock'
-  // End of Outputs for SubSystem: '<S24>/Enabled Subsystem'
-  // End of Outputs for SubSystem: '<S1>/Subscribe4'
-
-  // Sum: '<S1>/Subtract2'
-  explicitaccel_microaccel_B.Subtract2 = explicitaccel_microaccel_B.In1_n.Data +
-    explicitaccel_microaccel_B.In1.Data;
-
-  // Outputs for Atomic SubSystem: '<S1>/Subscribe6'
-  // MATLABSystem: '<S25>/SourceBlock'
-  b_varargout_1 = Sub_explicitaccel_microaccel_562.getLatestMessage
-    (&explicitaccel_microaccel_B.b_varargout_2);
-
-  // Outputs for Enabled SubSystem: '<S25>/Enabled Subsystem' incorporates:
-  //   EnablePort: '<S29>/Enable'
-
-  if (b_varargout_1) {
-    // SignalConversion generated from: '<S29>/In1'
-    explicitaccel_microaccel_B.In1_i = explicitaccel_microaccel_B.b_varargout_2;
-  }
-
-  // End of MATLABSystem: '<S25>/SourceBlock'
-  // End of Outputs for SubSystem: '<S25>/Enabled Subsystem'
-  // End of Outputs for SubSystem: '<S1>/Subscribe6'
-
-  // MATLABSystem: '<S1>/Get Parameter'
-  ParamGet_explicitaccel_microaccel_585.get_parameter
-    (&explicitaccel_microaccel_B.value);
-
-  // Outputs for Atomic SubSystem: '<S1>/Subscribe'
-  // MATLABSystem: '<S23>/SourceBlock'
-  b_varargout_1 = Sub_explicitaccel_microaccel_599.getLatestMessage
-    (&explicitaccel_microaccel_B.b_varargout_2);
-
-  // Outputs for Enabled SubSystem: '<S23>/Enabled Subsystem' incorporates:
-  //   EnablePort: '<S27>/Enable'
-
-  if (b_varargout_1) {
-    // SignalConversion generated from: '<S27>/In1'
-    explicitaccel_microaccel_B.In1_b = explicitaccel_microaccel_B.b_varargout_2;
-  }
-
-  // End of MATLABSystem: '<S23>/SourceBlock'
-  // End of Outputs for SubSystem: '<S23>/Enabled Subsystem'
-  // End of Outputs for SubSystem: '<S1>/Subscribe'
-
-  // MATLABSystem: '<S1>/Get Parameter1'
-  ParamGet_explicitaccel_microaccel_631.get_parameter(&b_varargout_1);
-
-  // MATLAB Function: '<S1>/MATLAB Function' incorporates:
-  //   MATLABSystem: '<S1>/Get Parameter'
-  //   MATLABSystem: '<S1>/Get Parameter1'
-
-  explicitaccel_microaccel_B.Switch = explicitaccel_microaccel_B.Subtract2;
-  explicitaccel_microaccel_B.headway = explicitaccel_microaccel_B.In1_i.Data;
-  u1 = explicitaccel_microaccel_B.In1_b.Data;
-  if (!b_varargout_1) {
-    u1 = -1.0;
-  }
-
-  if (!explicitaccel_microaccel_DW.previous_v_des_not_empty) {
-    explicitaccel_microaccel_DW.t_length = 1.0;
-    explicitaccel_microaccel_DW.previous_v_des_not_empty = true;
-    memset(&explicitaccel_microaccel_DW.prev_vels[0], 0, 1280U * sizeof(real_T));
-    explicitaccel_microaccel_DW.prev_vels[1279] =
-      explicitaccel_microaccel_B.Subtract2;
-  } else {
-    for (i = 0; i < 1279; i++) {
-      explicitaccel_microaccel_DW.prev_vels[i] =
-        explicitaccel_microaccel_DW.prev_vels[i + 1];
-    }
-
-    explicitaccel_microaccel_DW.prev_vels[1279] =
-      explicitaccel_microaccel_B.Subtract2;
-    if (explicitaccel_microaccel_DW.t_length < 1280.0) {
-      explicitaccel_microaccel_DW.t_length++;
-    }
-  }
-
-  if (u1 == -1.0) {
-    u1 = explicitaccel_microaccel_DW.prev_vels[0];
-    for (i = 0; i < 1023; i++) {
-      u1 += explicitaccel_microaccel_DW.prev_vels[i + 1];
-    }
-
-    explicitaccel_microaccel_B.bsum = explicitaccel_microaccel_DW.prev_vels[1024];
-    for (i = 0; i < 255; i++) {
-      explicitaccel_microaccel_B.bsum += explicitaccel_microaccel_DW.prev_vels[i
-        + 1025];
-    }
-
-    explicitaccel_microaccel_B.a_12 = 3.0 * explicitaccel_microaccel_B.In1.Data;
-    if (!(explicitaccel_microaccel_B.a_12 >= 30.0)) {
-      explicitaccel_microaccel_B.a_12 = 30.0;
-    }
-
-    if ((explicitaccel_microaccel_B.In1.Data <= 1.0) || rtIsNaN
-        (explicitaccel_microaccel_B.In1.Data)) {
-      explicitaccel_microaccel_B.TotalTime2 = 1.0;
-    } else {
-      explicitaccel_microaccel_B.TotalTime2 =
-        explicitaccel_microaccel_B.In1.Data;
-    }
-
-    explicitaccel_microaccel_B.a_12 = (explicitaccel_microaccel_B.In1_i.Data -
-      explicitaccel_microaccel_B.a_12) / explicitaccel_microaccel_B.TotalTime2;
-    if ((explicitaccel_microaccel_B.a_12 <= 0.0) || rtIsNaN
-        (explicitaccel_microaccel_B.a_12)) {
-      explicitaccel_microaccel_B.a_12 = 0.0;
-    }
-
-    u1 = explicitaccel_microaccel_B.a_12 * explicitaccel_microaccel_B.a_12 * 0.1
-      + (u1 + explicitaccel_microaccel_B.bsum) /
-      explicitaccel_microaccel_DW.t_length;
-  } else {
-    explicitaccel_microaccel_B.a_12 = 1.2 * explicitaccel_microaccel_B.Subtract2;
-    if ((u1 <= explicitaccel_microaccel_B.a_12) || rtIsNaN
-        (explicitaccel_microaccel_B.a_12)) {
-      explicitaccel_microaccel_B.a_12 = u1;
-    }
-
-    if (explicitaccel_microaccel_B.Subtract2 <= 35.0) {
-      explicitaccel_microaccel_B.TotalTime2 =
-        explicitaccel_microaccel_B.Subtract2;
-    } else {
-      explicitaccel_microaccel_B.TotalTime2 = 35.0;
-    }
-
-    u1 = 0.8 * explicitaccel_microaccel_B.TotalTime2;
-    if ((explicitaccel_microaccel_B.a_12 >= u1) || rtIsNaN(u1)) {
-      u1 = explicitaccel_microaccel_B.a_12;
-    }
-  }
-
-  if (fabs(explicitaccel_microaccel_B.In1_i.Data) < 0.001) {
-    explicitaccel_microaccel_B.headway = 0.001;
-  }
-
-  if ((explicitaccel_microaccel_B.headway == 252.0) &&
-      (explicitaccel_microaccel_DW.previous_dx < 220.0)) {
-    explicitaccel_microaccel_B.Switch = explicitaccel_microaccel_DW.prev_vels
-      [1278];
-    explicitaccel_microaccel_DW.prev_vels[1279] =
-      explicitaccel_microaccel_DW.prev_vels[1278];
-    explicitaccel_microaccel_B.headway = explicitaccel_microaccel_DW.previous_dx;
-  }
-
-  if (explicitaccel_microaccel_DW.prev_vels[1278] == 0.0) {
-    explicitaccel_microaccel_DW.previous_lead_acc = 0.0;
-  } else {
-    explicitaccel_microaccel_B.TotalTime2 = explicitaccel_microaccel_B.Switch -
-      explicitaccel_microaccel_DW.prev_vels[1278];
-    if (explicitaccel_microaccel_B.TotalTime2 < 0.165) {
-      explicitaccel_microaccel_DW.previous_lead_acc =
-        explicitaccel_microaccel_B.TotalTime2 / 0.05;
-    }
-  }
-
-  if (rtIsNaN(explicitaccel_microaccel_DW.previous_v_des)) {
-    explicitaccel_microaccel_B.bsum = 0.0;
-  } else {
-    explicitaccel_microaccel_B.bsum = (u1 -
-      explicitaccel_microaccel_DW.previous_v_des) / 0.05;
-  }
-
-  explicitaccel_microaccel_DW.previous_v_des = u1;
-  if (rtIsNaN(explicitaccel_microaccel_B.Switch) ||
-      ((explicitaccel_microaccel_B.headway == 252.0) &&
-       (explicitaccel_microaccel_DW.previous_dx > 220.0))) {
-    explicitaccel_microaccel_B.a_0 = 1.0;
-    explicitaccel_microaccel_B.v_max_dot = 0.0;
-    explicitaccel_microaccel_B.value = 30.0;
-    if (rtIsNaN(explicitaccel_microaccel_B.Switch)) {
-      u1 = 30.0;
-      explicitaccel_microaccel_B.bsum = 0.0;
-    }
-  } else {
-    if (rtIsNaN(explicitaccel_microaccel_DW.previous_dx)) {
-      explicitaccel_microaccel_DW.previous_dx =
-        explicitaccel_microaccel_B.headway;
-    }
-
-    if (explicitaccel_microaccel_B.headway - 18.0 >= 0.0) {
-      explicitaccel_microaccel_B.TotalTime2 = explicitaccel_microaccel_B.headway
-        - 18.0;
-    } else {
-      explicitaccel_microaccel_B.TotalTime2 = 0.0;
-    }
-
-    explicitaccel_microaccel_B.value = sqrt((explicitaccel_microaccel_B.Switch *
-      explicitaccel_microaccel_B.Switch * 0.5 / fabs
-      (explicitaccel_microaccel_B.value) + explicitaccel_microaccel_B.TotalTime2)
-      * 6.0);
-    if (rtIsNaN(explicitaccel_microaccel_DW.previous_v_max)) {
-      explicitaccel_microaccel_B.v_max_dot = 0.0;
-    } else if (fabs(explicitaccel_microaccel_B.headway -
-                    explicitaccel_microaccel_DW.previous_dx) > 2.5) {
-      explicitaccel_microaccel_B.v_max_dot = 0.0;
-    } else {
-      explicitaccel_microaccel_B.v_max_dot = (explicitaccel_microaccel_B.value -
-        explicitaccel_microaccel_DW.previous_v_max) / 0.05;
-    }
-
-    explicitaccel_microaccel_DW.previous_v_max =
-      explicitaccel_microaccel_B.value;
-    if (explicitaccel_microaccel_DW.previous_lead_acc < 0.0) {
-      explicitaccel_microaccel_B.a_0 =
-        explicitaccel_microaccel_DW.previous_lead_acc *
-        explicitaccel_microaccel_B.In1.Data / (explicitaccel_microaccel_B.Switch
-        + 0.001);
-      if ((explicitaccel_microaccel_B.headway - 18.0 <= 0.0) || rtIsNaN
-          (explicitaccel_microaccel_B.headway - 18.0)) {
-        explicitaccel_microaccel_B.TotalTime2 = 0.0;
-      } else {
-        explicitaccel_microaccel_B.TotalTime2 =
-          explicitaccel_microaccel_B.headway - 18.0;
-      }
-
-      explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data *
-        explicitaccel_microaccel_B.In1.Data * -0.5 /
-        ((explicitaccel_microaccel_B.Switch + 1.0E-5) *
-         (explicitaccel_microaccel_B.Switch + 1.0E-5) * 0.5 / fabs
-         (explicitaccel_microaccel_DW.previous_lead_acc - 0.01) +
-         explicitaccel_microaccel_B.TotalTime2);
-      if (explicitaccel_microaccel_B.a_0 < explicitaccel_microaccel_B.a_12) {
-        explicitaccel_microaccel_B.a_0 = explicitaccel_microaccel_B.a_12;
-      } else if (!(explicitaccel_microaccel_B.Switch >=
-                   explicitaccel_microaccel_B.In1.Data)) {
-        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.Switch -
-          explicitaccel_microaccel_B.In1.Data;
-        if (explicitaccel_microaccel_B.headway - 18.0 >= 0.0001) {
-          explicitaccel_microaccel_B.TotalTime2 =
-            explicitaccel_microaccel_B.headway - 18.0;
-        } else {
-          explicitaccel_microaccel_B.TotalTime2 = 0.0001;
-        }
-
-        explicitaccel_microaccel_B.a_0 =
-          explicitaccel_microaccel_DW.previous_lead_acc -
-          explicitaccel_microaccel_B.a_12 * explicitaccel_microaccel_B.a_12 /
-          (2.0 * explicitaccel_microaccel_B.TotalTime2);
-      }
-    } else if (explicitaccel_microaccel_DW.previous_lead_acc >= 0.0) {
-      if (explicitaccel_microaccel_B.Switch <=
-          explicitaccel_microaccel_B.In1.Data) {
-        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data -
-          explicitaccel_microaccel_B.Switch;
-        if ((explicitaccel_microaccel_B.a_12 <= 0.0) || rtIsNaN
-            (explicitaccel_microaccel_B.a_12)) {
-          explicitaccel_microaccel_B.a_12 = 0.0;
-        }
-
-        if (explicitaccel_microaccel_B.headway - 18.0 >= 0.001) {
-          explicitaccel_microaccel_B.TotalTime2 =
-            explicitaccel_microaccel_B.headway - 18.0;
-        } else {
-          explicitaccel_microaccel_B.TotalTime2 = 0.001;
-        }
-
-        explicitaccel_microaccel_B.a_0 =
-          explicitaccel_microaccel_DW.previous_lead_acc -
-          explicitaccel_microaccel_B.a_12 * explicitaccel_microaccel_B.a_12 /
-          (2.0 * explicitaccel_microaccel_B.TotalTime2);
-      } else {
-        explicitaccel_microaccel_B.a_0 = (explicitaccel_microaccel_B.Switch -
-          explicitaccel_microaccel_B.In1.Data) *
-          explicitaccel_microaccel_DW.previous_lead_acc +
-          explicitaccel_microaccel_DW.previous_lead_acc;
-        if ((explicitaccel_microaccel_B.a_0 >= 1.0) || rtIsNaN
-            (explicitaccel_microaccel_B.a_0)) {
-          explicitaccel_microaccel_B.a_0 = 1.0;
-        }
-      }
-    } else {
-      explicitaccel_microaccel_B.a_0 = (rtNaN);
-      printf("This is an error\n");
-      fflush(stdout);
-    }
-
-    explicitaccel_microaccel_B.TotalTime2 = explicitaccel_microaccel_B.In1.Data *
-      4.0;
-    if (explicitaccel_microaccel_B.headway >
-        explicitaccel_microaccel_B.TotalTime2) {
-      if (explicitaccel_microaccel_B.In1.Data >= 0.001) {
-        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data;
-      } else {
-        explicitaccel_microaccel_B.a_12 = 0.001;
-      }
-
-      explicitaccel_microaccel_B.a_0 += (explicitaccel_microaccel_B.headway -
-        explicitaccel_microaccel_B.TotalTime2) / explicitaccel_microaccel_B.a_12;
-    }
-
-    explicitaccel_microaccel_DW.previous_dx = explicitaccel_microaccel_B.headway;
-  }
-
-  if (!(explicitaccel_microaccel_B.a_0 >= -1.0)) {
-    explicitaccel_microaccel_B.a_0 = -1.0;
-  }
-
-  explicitaccel_microaccel_B.a_12 = -(explicitaccel_microaccel_B.In1.Data - u1)
-    + explicitaccel_microaccel_B.bsum;
-  if (!(explicitaccel_microaccel_B.a_12 >= -0.4)) {
-    explicitaccel_microaccel_B.a_12 = -0.4;
-  }
-
-  explicitaccel_microaccel_B.headway = -(explicitaccel_microaccel_B.In1.Data -
-    explicitaccel_microaccel_B.value) + explicitaccel_microaccel_B.v_max_dot;
-  if ((explicitaccel_microaccel_B.a_12 <= explicitaccel_microaccel_B.headway) ||
-      rtIsNaN(explicitaccel_microaccel_B.headway)) {
-    explicitaccel_microaccel_B.Switch = explicitaccel_microaccel_B.a_12;
-  } else {
-    explicitaccel_microaccel_B.Switch = explicitaccel_microaccel_B.headway;
-  }
-
-  if ((!(explicitaccel_microaccel_B.Switch <= explicitaccel_microaccel_B.a_0)) &&
-      (!rtIsNaN(explicitaccel_microaccel_B.a_0))) {
-    explicitaccel_microaccel_B.Switch = explicitaccel_microaccel_B.a_0;
-  }
-
-  if (!(explicitaccel_microaccel_B.Switch >= -3.0)) {
-    explicitaccel_microaccel_B.Switch = -3.0;
-  }
-
-  if (!(explicitaccel_microaccel_B.Switch <= 1.0)) {
-    explicitaccel_microaccel_B.Switch = 1.0;
-  }
-
-  if ((explicitaccel_microaccel_B.In1.Data >= 30.0) &&
-      ((explicitaccel_microaccel_B.Switch >= 0.0) || rtIsNaN
-       (explicitaccel_microaccel_B.Switch))) {
-    explicitaccel_microaccel_B.Switch = 0.0;
+  // Update absolute time of base rate at minor time step
+  if (rtmIsMinorTimeStep(explicitaccel_microaccel_M)) {
+    explicitaccel_microaccel_M->Timing.t[0] = rtsiGetT
+      (&explicitaccel_microaccel_M->solverInfo);
   }
 
   // BusAssignment: '<S1>/Bus Assignment1' incorporates:
   //   Constant: '<S1>/Constant'
   //   Constant: '<S2>/Constant'
-  //   MATLAB Function: '<S1>/MATLAB Function'
+  //   Integrator: '<S1>/Integrator'
 
   explicitaccel_microaccel_B.BusAssignment1 =
     explicitaccel_microaccel_P.Constant_Value;
-  explicitaccel_microaccel_B.BusAssignment1.Linear.X = u1;
-  explicitaccel_microaccel_B.BusAssignment1.Linear.Y =
-    explicitaccel_microaccel_B.value;
+  explicitaccel_microaccel_B.BusAssignment1.Linear.X =
+    explicitaccel_microaccel_X.Integrator_CSTATE;
   explicitaccel_microaccel_B.BusAssignment1.Angular.Z =
     explicitaccel_microaccel_P.Constant_Value_a;
 
@@ -439,6 +171,389 @@ void explicitaccel_microaccel_step(void)
     (&explicitaccel_microaccel_B.BusAssignment1);
 
   // End of Outputs for SubSystem: '<S1>/Publish1'
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+    // Outputs for Atomic SubSystem: '<S1>/Subscribe8'
+    // MATLABSystem: '<S26>/SourceBlock'
+    b_varargout_1 = Sub_explicitaccel_microaccel_559.getLatestMessage
+      (&explicitaccel_microaccel_B.b_varargout_2);
+
+    // Outputs for Enabled SubSystem: '<S26>/Enabled Subsystem' incorporates:
+    //   EnablePort: '<S30>/Enable'
+
+    if (b_varargout_1) {
+      // SignalConversion generated from: '<S30>/In1'
+      explicitaccel_microaccel_B.In1 = explicitaccel_microaccel_B.b_varargout_2;
+    }
+
+    // End of MATLABSystem: '<S26>/SourceBlock'
+    // End of Outputs for SubSystem: '<S26>/Enabled Subsystem'
+    // End of Outputs for SubSystem: '<S1>/Subscribe8'
+
+    // Outputs for Atomic SubSystem: '<S1>/Subscribe4'
+    // MATLABSystem: '<S24>/SourceBlock'
+    b_varargout_1 = Sub_explicitaccel_microaccel_624.getLatestMessage
+      (&explicitaccel_microaccel_B.b_varargout_2);
+
+    // Outputs for Enabled SubSystem: '<S24>/Enabled Subsystem' incorporates:
+    //   EnablePort: '<S28>/Enable'
+
+    if (b_varargout_1) {
+      // SignalConversion generated from: '<S28>/In1'
+      explicitaccel_microaccel_B.In1_n =
+        explicitaccel_microaccel_B.b_varargout_2;
+    }
+
+    // End of MATLABSystem: '<S24>/SourceBlock'
+    // End of Outputs for SubSystem: '<S24>/Enabled Subsystem'
+    // End of Outputs for SubSystem: '<S1>/Subscribe4'
+
+    // Sum: '<S1>/Subtract2'
+    explicitaccel_microaccel_B.Subtract2 = explicitaccel_microaccel_B.In1_n.Data
+      + explicitaccel_microaccel_B.In1.Data;
+
+    // Outputs for Atomic SubSystem: '<S1>/Subscribe6'
+    // MATLABSystem: '<S25>/SourceBlock'
+    b_varargout_1 = Sub_explicitaccel_microaccel_562.getLatestMessage
+      (&explicitaccel_microaccel_B.b_varargout_2);
+
+    // Outputs for Enabled SubSystem: '<S25>/Enabled Subsystem' incorporates:
+    //   EnablePort: '<S29>/Enable'
+
+    if (b_varargout_1) {
+      // SignalConversion generated from: '<S29>/In1'
+      explicitaccel_microaccel_B.In1_i =
+        explicitaccel_microaccel_B.b_varargout_2;
+    }
+
+    // End of MATLABSystem: '<S25>/SourceBlock'
+    // End of Outputs for SubSystem: '<S25>/Enabled Subsystem'
+    // End of Outputs for SubSystem: '<S1>/Subscribe6'
+  }
+
+  // MATLABSystem: '<S1>/Get Parameter'
+  ParamGet_explicitaccel_microaccel_585.get_parameter
+    (&explicitaccel_microaccel_B.v_max_dot);
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+    // Outputs for Atomic SubSystem: '<S1>/Subscribe'
+    // MATLABSystem: '<S23>/SourceBlock'
+    b_varargout_1 = Sub_explicitaccel_microaccel_599.getLatestMessage
+      (&explicitaccel_microaccel_B.b_varargout_2);
+
+    // Outputs for Enabled SubSystem: '<S23>/Enabled Subsystem' incorporates:
+    //   EnablePort: '<S27>/Enable'
+
+    if (b_varargout_1) {
+      // SignalConversion generated from: '<S27>/In1'
+      explicitaccel_microaccel_B.In1_b =
+        explicitaccel_microaccel_B.b_varargout_2;
+    }
+
+    // End of MATLABSystem: '<S23>/SourceBlock'
+    // End of Outputs for SubSystem: '<S23>/Enabled Subsystem'
+    // End of Outputs for SubSystem: '<S1>/Subscribe'
+  }
+
+  // MATLABSystem: '<S1>/Get Parameter1'
+  ParamGet_explicitaccel_microaccel_631.get_parameter(&b_varargout_1);
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+    // MATLAB Function: '<S1>/MATLAB Function' incorporates:
+    //   MATLABSystem: '<S1>/Get Parameter'
+    //   MATLABSystem: '<S1>/Get Parameter1'
+
+    explicitaccel_microaccel_B.lead_vel = explicitaccel_microaccel_B.Subtract2;
+    explicitaccel_microaccel_B.a_vdes = explicitaccel_microaccel_B.In1_i.Data;
+    rtb_v_des = explicitaccel_microaccel_B.In1_b.Data;
+    if (!b_varargout_1) {
+      rtb_v_des = -1.0;
+    }
+
+    if (!explicitaccel_microaccel_DW.previous_v_des_not_empty) {
+      explicitaccel_microaccel_DW.t_length = 1.0;
+      explicitaccel_microaccel_DW.previous_v_des_not_empty = true;
+      memset(&explicitaccel_microaccel_DW.prev_vels[0], 0, 1280U * sizeof(real_T));
+      explicitaccel_microaccel_DW.prev_vels[1279] =
+        explicitaccel_microaccel_B.Subtract2;
+    } else {
+      for (i = 0; i < 1279; i++) {
+        explicitaccel_microaccel_DW.prev_vels[i] =
+          explicitaccel_microaccel_DW.prev_vels[i + 1];
+      }
+
+      explicitaccel_microaccel_DW.prev_vels[1279] =
+        explicitaccel_microaccel_B.Subtract2;
+      if (explicitaccel_microaccel_DW.t_length < 1280.0) {
+        explicitaccel_microaccel_DW.t_length++;
+      }
+    }
+
+    if (rtb_v_des == -1.0) {
+      rtb_v_des = explicitaccel_microaccel_DW.prev_vels[0];
+      for (i = 0; i < 1023; i++) {
+        rtb_v_des += explicitaccel_microaccel_DW.prev_vels[i + 1];
+      }
+
+      explicitaccel_microaccel_B.bsum = explicitaccel_microaccel_DW.prev_vels
+        [1024];
+      for (i = 0; i < 255; i++) {
+        explicitaccel_microaccel_B.bsum +=
+          explicitaccel_microaccel_DW.prev_vels[i + 1025];
+      }
+
+      rtb_v_des_dot = 3.0 * explicitaccel_microaccel_B.In1.Data;
+      if (!(rtb_v_des_dot >= 30.0)) {
+        rtb_v_des_dot = 30.0;
+      }
+
+      if ((explicitaccel_microaccel_B.In1.Data <= 1.0) || rtIsNaN
+          (explicitaccel_microaccel_B.In1.Data)) {
+        explicitaccel_microaccel_B.a_12 = 1.0;
+      } else {
+        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data;
+      }
+
+      explicitaccel_microaccel_B.a_0 = (explicitaccel_microaccel_B.In1_i.Data -
+        rtb_v_des_dot) / explicitaccel_microaccel_B.a_12;
+      if ((explicitaccel_microaccel_B.a_0 <= 0.0) || rtIsNaN
+          (explicitaccel_microaccel_B.a_0)) {
+        explicitaccel_microaccel_B.a_0 = 0.0;
+      }
+
+      rtb_v_des = explicitaccel_microaccel_B.a_0 *
+        explicitaccel_microaccel_B.a_0 * 0.1 + (rtb_v_des +
+        explicitaccel_microaccel_B.bsum) / explicitaccel_microaccel_DW.t_length;
+    } else {
+      explicitaccel_microaccel_B.a_0 = 1.2 *
+        explicitaccel_microaccel_B.Subtract2;
+      if ((rtb_v_des <= explicitaccel_microaccel_B.a_0) || rtIsNaN
+          (explicitaccel_microaccel_B.a_0)) {
+        explicitaccel_microaccel_B.a_0 = rtb_v_des;
+      }
+
+      if (explicitaccel_microaccel_B.Subtract2 <= 35.0) {
+        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.Subtract2;
+      } else {
+        explicitaccel_microaccel_B.a_12 = 35.0;
+      }
+
+      rtb_v_des = 0.8 * explicitaccel_microaccel_B.a_12;
+      if ((explicitaccel_microaccel_B.a_0 >= rtb_v_des) || rtIsNaN(rtb_v_des)) {
+        rtb_v_des = explicitaccel_microaccel_B.a_0;
+      }
+    }
+
+    if (fabs(explicitaccel_microaccel_B.In1_i.Data) < 0.001) {
+      explicitaccel_microaccel_B.a_vdes = 0.001;
+    }
+
+    if ((explicitaccel_microaccel_B.a_vdes == 252.0) &&
+        (explicitaccel_microaccel_DW.previous_dx < 220.0)) {
+      explicitaccel_microaccel_B.lead_vel =
+        explicitaccel_microaccel_DW.prev_vels[1278];
+      explicitaccel_microaccel_DW.prev_vels[1279] =
+        explicitaccel_microaccel_DW.prev_vels[1278];
+      explicitaccel_microaccel_B.a_vdes =
+        explicitaccel_microaccel_DW.previous_dx;
+    }
+
+    if (explicitaccel_microaccel_DW.prev_vels[1278] == 0.0) {
+      explicitaccel_microaccel_DW.previous_lead_acc = 0.0;
+    } else {
+      explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.lead_vel -
+        explicitaccel_microaccel_DW.prev_vels[1278];
+      if (explicitaccel_microaccel_B.a_12 < 0.165) {
+        explicitaccel_microaccel_DW.previous_lead_acc =
+          explicitaccel_microaccel_B.a_12 / 0.05;
+      }
+    }
+
+    if (rtIsNaN(explicitaccel_microaccel_DW.previous_v_des)) {
+      rtb_v_des_dot = 0.0;
+    } else {
+      rtb_v_des_dot = (rtb_v_des - explicitaccel_microaccel_DW.previous_v_des) /
+        0.05;
+    }
+
+    explicitaccel_microaccel_DW.previous_v_des = rtb_v_des;
+    if (rtIsNaN(explicitaccel_microaccel_B.lead_vel) ||
+        ((explicitaccel_microaccel_B.a_vdes == 252.0) &&
+         (explicitaccel_microaccel_DW.previous_dx > 220.0))) {
+      explicitaccel_microaccel_B.a_0 = 1.0;
+      explicitaccel_microaccel_B.v_max_dot = 0.0;
+      explicitaccel_microaccel_B.bsum = 30.0;
+      if (rtIsNaN(explicitaccel_microaccel_B.lead_vel)) {
+        rtb_v_des = 30.0;
+        rtb_v_des_dot = 0.0;
+      }
+    } else {
+      if (rtIsNaN(explicitaccel_microaccel_DW.previous_dx)) {
+        explicitaccel_microaccel_DW.previous_dx =
+          explicitaccel_microaccel_B.a_vdes;
+      }
+
+      if (explicitaccel_microaccel_B.a_vdes - 18.0 >= 0.0) {
+        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes -
+          18.0;
+      } else {
+        explicitaccel_microaccel_B.a_12 = 0.0;
+      }
+
+      explicitaccel_microaccel_B.bsum = sqrt
+        ((explicitaccel_microaccel_B.lead_vel *
+          explicitaccel_microaccel_B.lead_vel * 0.5 / fabs
+          (explicitaccel_microaccel_B.v_max_dot) +
+          explicitaccel_microaccel_B.a_12) * 6.0);
+      if (rtIsNaN(explicitaccel_microaccel_DW.previous_v_max)) {
+        explicitaccel_microaccel_B.v_max_dot = 0.0;
+      } else if (fabs(explicitaccel_microaccel_B.a_vdes -
+                      explicitaccel_microaccel_DW.previous_dx) > 2.5) {
+        explicitaccel_microaccel_B.v_max_dot = 0.0;
+      } else {
+        explicitaccel_microaccel_B.v_max_dot = (explicitaccel_microaccel_B.bsum
+          - explicitaccel_microaccel_DW.previous_v_max) / 0.05;
+      }
+
+      explicitaccel_microaccel_DW.previous_v_max =
+        explicitaccel_microaccel_B.bsum;
+      if (explicitaccel_microaccel_DW.previous_lead_acc < 0.0) {
+        explicitaccel_microaccel_B.a_0 =
+          explicitaccel_microaccel_DW.previous_lead_acc *
+          explicitaccel_microaccel_B.In1.Data /
+          (explicitaccel_microaccel_B.lead_vel + 0.001);
+        if ((explicitaccel_microaccel_B.a_vdes - 18.0 <= 0.0) || rtIsNaN
+            (explicitaccel_microaccel_B.a_vdes - 18.0)) {
+          explicitaccel_microaccel_B.a_12 = 0.0;
+        } else {
+          explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes -
+            18.0;
+        }
+
+        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data *
+          explicitaccel_microaccel_B.In1.Data * -0.5 /
+          ((explicitaccel_microaccel_B.lead_vel + 1.0E-5) *
+           (explicitaccel_microaccel_B.lead_vel + 1.0E-5) * 0.5 / fabs
+           (explicitaccel_microaccel_DW.previous_lead_acc - 0.01) +
+           explicitaccel_microaccel_B.a_12);
+        if (explicitaccel_microaccel_B.a_0 < explicitaccel_microaccel_B.a_12) {
+          explicitaccel_microaccel_B.a_0 = explicitaccel_microaccel_B.a_12;
+        } else if (!(explicitaccel_microaccel_B.lead_vel >=
+                     explicitaccel_microaccel_B.In1.Data)) {
+          explicitaccel_microaccel_B.a_0 = explicitaccel_microaccel_B.lead_vel -
+            explicitaccel_microaccel_B.In1.Data;
+          if (explicitaccel_microaccel_B.a_vdes - 18.0 >= 0.0001) {
+            explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes
+              - 18.0;
+          } else {
+            explicitaccel_microaccel_B.a_12 = 0.0001;
+          }
+
+          explicitaccel_microaccel_B.a_0 =
+            explicitaccel_microaccel_DW.previous_lead_acc -
+            explicitaccel_microaccel_B.a_0 * explicitaccel_microaccel_B.a_0 /
+            (2.0 * explicitaccel_microaccel_B.a_12);
+        }
+      } else if (explicitaccel_microaccel_DW.previous_lead_acc >= 0.0) {
+        if (explicitaccel_microaccel_B.lead_vel <=
+            explicitaccel_microaccel_B.In1.Data) {
+          explicitaccel_microaccel_B.a_0 = explicitaccel_microaccel_B.In1.Data -
+            explicitaccel_microaccel_B.lead_vel;
+          if ((explicitaccel_microaccel_B.a_0 <= 0.0) || rtIsNaN
+              (explicitaccel_microaccel_B.a_0)) {
+            explicitaccel_microaccel_B.a_0 = 0.0;
+          }
+
+          if (explicitaccel_microaccel_B.a_vdes - 18.0 >= 0.001) {
+            explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes
+              - 18.0;
+          } else {
+            explicitaccel_microaccel_B.a_12 = 0.001;
+          }
+
+          explicitaccel_microaccel_B.a_0 =
+            explicitaccel_microaccel_DW.previous_lead_acc -
+            explicitaccel_microaccel_B.a_0 * explicitaccel_microaccel_B.a_0 /
+            (2.0 * explicitaccel_microaccel_B.a_12);
+        } else {
+          explicitaccel_microaccel_B.a_0 = (explicitaccel_microaccel_B.lead_vel
+            - explicitaccel_microaccel_B.In1.Data) *
+            explicitaccel_microaccel_DW.previous_lead_acc +
+            explicitaccel_microaccel_DW.previous_lead_acc;
+          if ((explicitaccel_microaccel_B.a_0 >= 1.0) || rtIsNaN
+              (explicitaccel_microaccel_B.a_0)) {
+            explicitaccel_microaccel_B.a_0 = 1.0;
+          }
+        }
+      } else {
+        explicitaccel_microaccel_B.a_0 = (rtNaN);
+        printf("This is an error\n");
+        fflush(stdout);
+      }
+
+      explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data *
+        4.0;
+      if (explicitaccel_microaccel_B.a_vdes > explicitaccel_microaccel_B.a_12) {
+        if (explicitaccel_microaccel_B.In1.Data >= 0.001) {
+          explicitaccel_microaccel_B.lead_vel =
+            explicitaccel_microaccel_B.In1.Data;
+        } else {
+          explicitaccel_microaccel_B.lead_vel = 0.001;
+        }
+
+        explicitaccel_microaccel_B.a_0 += (explicitaccel_microaccel_B.a_vdes -
+          explicitaccel_microaccel_B.a_12) / explicitaccel_microaccel_B.lead_vel;
+      }
+
+      explicitaccel_microaccel_DW.previous_dx =
+        explicitaccel_microaccel_B.a_vdes;
+    }
+
+    if (!(explicitaccel_microaccel_B.a_0 >= -1.0)) {
+      explicitaccel_microaccel_B.a_0 = -1.0;
+    }
+
+    explicitaccel_microaccel_B.a_vdes = -(explicitaccel_microaccel_B.In1.Data -
+      rtb_v_des) + rtb_v_des_dot;
+    if (!(explicitaccel_microaccel_B.a_vdes >= -0.4)) {
+      explicitaccel_microaccel_B.a_vdes = -0.4;
+    }
+
+    explicitaccel_microaccel_B.a_12 = -(explicitaccel_microaccel_B.In1.Data -
+      explicitaccel_microaccel_B.bsum) + explicitaccel_microaccel_B.v_max_dot;
+    if ((explicitaccel_microaccel_B.a_vdes <= explicitaccel_microaccel_B.a_12) ||
+        rtIsNaN(explicitaccel_microaccel_B.a_12)) {
+      explicitaccel_microaccel_B.accel = explicitaccel_microaccel_B.a_vdes;
+    } else {
+      explicitaccel_microaccel_B.accel = explicitaccel_microaccel_B.a_12;
+    }
+
+    if ((!(explicitaccel_microaccel_B.accel <= explicitaccel_microaccel_B.a_0)) &&
+        (!rtIsNaN(explicitaccel_microaccel_B.a_0))) {
+      explicitaccel_microaccel_B.accel = explicitaccel_microaccel_B.a_0;
+    }
+
+    if (!(explicitaccel_microaccel_B.accel >= -3.0)) {
+      explicitaccel_microaccel_B.accel = -3.0;
+    }
+
+    if (!(explicitaccel_microaccel_B.accel <= 1.0)) {
+      explicitaccel_microaccel_B.accel = 1.0;
+    }
+
+    if ((explicitaccel_microaccel_B.In1.Data >= 30.0) &&
+        ((explicitaccel_microaccel_B.accel >= 0.0) || rtIsNaN
+         (explicitaccel_microaccel_B.accel))) {
+      explicitaccel_microaccel_B.accel = 0.0;
+    }
+
+    // End of MATLAB Function: '<S1>/MATLAB Function'
+
+    // Memory: '<S1>/accel_memory'
+    explicitaccel_microaccel_B.accel_memory =
+      explicitaccel_microaccel_DW.accel_memory_PreviousInput;
+
+    // Memory: '<S1>/headway_memory'
+    explicitaccel_microaccel_B.headway_memory =
+      explicitaccel_microaccel_DW.headway_memory_PreviousInput;
+  }
 
   // MATLABSystem: '<S1>/Current Time2'
   currentROSTimeBus(&explicitaccel_microaccel_B.r);
@@ -449,18 +564,21 @@ void explicitaccel_microaccel_step(void)
 
   explicitaccel_microaccel_B.TotalTime2 = explicitaccel_microaccel_P.Gain2_Gain *
     explicitaccel_microaccel_B.r.Nsec + explicitaccel_microaccel_B.r.Sec;
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+    // Memory: '<S1>/Memory'
+    explicitaccel_microaccel_B.Memory =
+      explicitaccel_microaccel_DW.Memory_PreviousInput;
+  }
 
-  // Sum: '<S1>/Subtract1' incorporates:
-  //   Memory: '<S1>/Memory'
-
+  // Sum: '<S1>/Subtract1'
   explicitaccel_microaccel_B.v_max_dot = explicitaccel_microaccel_B.TotalTime2 -
-    explicitaccel_microaccel_DW.Memory_PreviousInput;
+    explicitaccel_microaccel_B.Memory;
 
   // MATLAB Function: '<S1>/MATLAB Function1' incorporates:
   //   MATLAB Function: '<S1>/MATLAB Function2'
-  //   Memory: '<S1>/headway_memory'
 
-  explicitaccel_microaccel_B.Subtract2 -= explicitaccel_microaccel_B.In1.Data;
+  explicitaccel_microaccel_B.lead_vel = explicitaccel_microaccel_B.Subtract2 -
+    explicitaccel_microaccel_B.In1.Data;
   explicitaccel_microaccel_B.alpha = explicitaccel_microaccel_B.In1_i.Data /
     explicitaccel_microaccel_B.In1.Data;
   explicitaccel_microaccel_B.th = static_cast<real_T>
@@ -468,41 +586,35 @@ void explicitaccel_microaccel_step(void)
     explicitaccel_microaccel_B.alpha + static_cast<real_T>
     (explicitaccel_microaccel_B.In1.Data <= 0.0) * 60.0;
   explicitaccel_microaccel_B.ttc = static_cast<real_T>
-    (explicitaccel_microaccel_B.Subtract2 < 0.0) *
+    (explicitaccel_microaccel_B.lead_vel < 0.0) *
     (-explicitaccel_microaccel_B.In1_i.Data /
-     explicitaccel_microaccel_B.Subtract2) + static_cast<real_T>
-    (explicitaccel_microaccel_B.Subtract2 >= 0.0) * 60.0;
+     explicitaccel_microaccel_B.lead_vel) + static_cast<real_T>
+    (explicitaccel_microaccel_B.lead_vel >= 0.0) * 60.0;
   explicitaccel_microaccel_B.difference = explicitaccel_microaccel_B.In1_i.Data
-    - explicitaccel_microaccel_DW.headway_memory_PreviousInput;
+    - explicitaccel_microaccel_B.headway_memory;
 
-  // MATLAB Function: '<S1>/MATLAB Function2' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
-  //   Memory: '<S1>/accel_memory'
-
+  // MATLAB Function: '<S1>/MATLAB Function2'
   explicitaccel_microaccel_B.alpha = (tanh((10.34 /
     explicitaccel_microaccel_B.In1_i.Data * static_cast<real_T>
-    (explicitaccel_microaccel_B.Subtract2 < 0.0) + static_cast<real_T>
-    (explicitaccel_microaccel_B.Subtract2 >= 0.0)) *
-    explicitaccel_microaccel_B.Subtract2) * 0.5 + 0.5) * 0.25 + tanh((
+    (explicitaccel_microaccel_B.lead_vel < 0.0) + static_cast<real_T>
+    (explicitaccel_microaccel_B.lead_vel >= 0.0)) *
+    explicitaccel_microaccel_B.lead_vel) * 0.5 + 0.5) * 0.25 + tanh((
     static_cast<real_T>(explicitaccel_microaccel_B.In1.Data > 0.0) *
     explicitaccel_microaccel_B.alpha + static_cast<real_T>
     (explicitaccel_microaccel_B.In1.Data <= 0.0) * 60.0) * 1.32) * 0.75;
-  explicitaccel_microaccel_B.alpha = (1.0 - explicitaccel_microaccel_B.alpha) *
-    explicitaccel_microaccel_B.Switch + explicitaccel_microaccel_B.alpha *
-    explicitaccel_microaccel_DW.accel_memory_PreviousInput;
+  explicitaccel_microaccel_B.Switch = (1.0 - explicitaccel_microaccel_B.alpha) *
+    explicitaccel_microaccel_B.accel + explicitaccel_microaccel_B.alpha *
+    explicitaccel_microaccel_B.accel_memory;
 
-  // MATLAB Function: '<S1>/MATLAB Function1' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
-  //   Memory: '<S1>/accel_memory'
-
+  // MATLAB Function: '<S1>/MATLAB Function1'
   if (explicitaccel_microaccel_B.difference <= -3.5) {
-    if (fabs(explicitaccel_microaccel_B.Switch -
-             explicitaccel_microaccel_DW.accel_memory_PreviousInput) > 0.9 *
+    if (fabs(explicitaccel_microaccel_B.accel -
+             explicitaccel_microaccel_B.accel_memory) > 0.9 *
         explicitaccel_microaccel_B.v_max_dot) {
-      if ((explicitaccel_microaccel_B.Subtract2 >= 0.0) &&
+      if ((explicitaccel_microaccel_B.lead_vel >= 0.0) &&
           (explicitaccel_microaccel_B.th > 2.0)) {
         i = -1;
-      } else if ((explicitaccel_microaccel_B.Subtract2 < 0.0) &&
+      } else if ((explicitaccel_microaccel_B.lead_vel < 0.0) &&
                  (explicitaccel_microaccel_B.ttc > 4.5)) {
         i = -1;
       } else {
@@ -512,14 +624,14 @@ void explicitaccel_microaccel_step(void)
       i = 0;
     }
   } else if ((explicitaccel_microaccel_B.difference >= 3.5) && (fabs
-              (explicitaccel_microaccel_B.Switch -
-               explicitaccel_microaccel_DW.accel_memory_PreviousInput) > 0.9 *
+              (explicitaccel_microaccel_B.accel -
+               explicitaccel_microaccel_B.accel_memory) > 0.9 *
               explicitaccel_microaccel_B.v_max_dot)) {
-    if ((explicitaccel_microaccel_B.Subtract2 >= 0.0) &&
+    if ((explicitaccel_microaccel_B.lead_vel >= 0.0) &&
         (explicitaccel_microaccel_B.th > 2.0)) {
       i = 1;
     } else {
-      i = ((explicitaccel_microaccel_B.Subtract2 < 0.0) &&
+      i = ((explicitaccel_microaccel_B.lead_vel < 0.0) &&
            (explicitaccel_microaccel_B.ttc > 4.5));
     }
   } else {
@@ -529,13 +641,17 @@ void explicitaccel_microaccel_step(void)
   // Switch: '<S1>/Switch' incorporates:
   //   MATLAB Function: '<S1>/MATLAB Function1'
 
-  if ((i != 0) && (!(fabs(explicitaccel_microaccel_B.alpha -
-                          explicitaccel_microaccel_B.Switch) < 0.3 *
-                     explicitaccel_microaccel_B.v_max_dot))) {
-    // MATLAB Function: '<S1>/MATLAB Function2' incorporates:
-    //   MATLAB Function: '<S1>/MATLAB Function'
-
-    explicitaccel_microaccel_B.Switch = explicitaccel_microaccel_B.alpha;
+  if (i != 0) {
+    // MATLAB Function: '<S1>/MATLAB Function2'
+    if (fabs(explicitaccel_microaccel_B.Switch -
+             explicitaccel_microaccel_B.accel) < 0.3 *
+        explicitaccel_microaccel_B.v_max_dot) {
+      // Switch: '<S1>/Switch'
+      explicitaccel_microaccel_B.Switch = explicitaccel_microaccel_B.accel;
+    }
+  } else {
+    // Switch: '<S1>/Switch'
+    explicitaccel_microaccel_B.Switch = explicitaccel_microaccel_B.accel;
   }
 
   // End of Switch: '<S1>/Switch'
@@ -550,72 +666,63 @@ void explicitaccel_microaccel_step(void)
     (&explicitaccel_microaccel_B.BusAssignment5);
 
   // End of Outputs for SubSystem: '<S1>/Publish2'
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+    // BusAssignment: '<S1>/Bus Assignment2'
+    explicitaccel_microaccel_B.BusAssignment2.Data =
+      explicitaccel_microaccel_B.a_vdes;
 
-  // BusAssignment: '<S1>/Bus Assignment2' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
+    // Outputs for Atomic SubSystem: '<S1>/Publish3'
+    // MATLABSystem: '<S16>/SinkBlock'
+    Pub_explicitaccel_microaccel_610.publish
+      (&explicitaccel_microaccel_B.BusAssignment2);
 
-  rtb_BusAssignment2.Data = explicitaccel_microaccel_B.a_12;
+    // End of Outputs for SubSystem: '<S1>/Publish3'
 
-  // Outputs for Atomic SubSystem: '<S1>/Publish3'
-  // MATLABSystem: '<S16>/SinkBlock'
-  Pub_explicitaccel_microaccel_610.publish(&rtb_BusAssignment2);
+    // BusAssignment: '<S1>/Bus Assignment3'
+    rtb_BusAssignment3.Data = explicitaccel_microaccel_B.a_12;
 
-  // End of Outputs for SubSystem: '<S1>/Publish3'
+    // Outputs for Atomic SubSystem: '<S1>/Publish4'
+    // MATLABSystem: '<S17>/SinkBlock'
+    Pub_explicitaccel_microaccel_611.publish(&rtb_BusAssignment3);
 
-  // BusAssignment: '<S1>/Bus Assignment3' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
+    // End of Outputs for SubSystem: '<S1>/Publish4'
 
-  rtb_BusAssignment3.Data = explicitaccel_microaccel_B.headway;
+    // BusAssignment: '<S1>/Bus Assignment4'
+    rtb_BusAssignment4.Data = explicitaccel_microaccel_B.a_0;
 
-  // Outputs for Atomic SubSystem: '<S1>/Publish4'
-  // MATLABSystem: '<S17>/SinkBlock'
-  Pub_explicitaccel_microaccel_611.publish(&rtb_BusAssignment3);
+    // Outputs for Atomic SubSystem: '<S1>/Publish5'
+    // MATLABSystem: '<S18>/SinkBlock'
+    Pub_explicitaccel_microaccel_612.publish(&rtb_BusAssignment4);
 
-  // End of Outputs for SubSystem: '<S1>/Publish4'
+    // End of Outputs for SubSystem: '<S1>/Publish5'
 
-  // BusAssignment: '<S1>/Bus Assignment4' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
+    // BusAssignment: '<S1>/Bus Assignment7'
+    rtb_BusAssignment7.Data = rtb_v_des_dot;
 
-  rtb_BusAssignment4.Data = explicitaccel_microaccel_B.a_0;
+    // Outputs for Atomic SubSystem: '<S1>/Publish7'
+    // MATLABSystem: '<S20>/SinkBlock'
+    Pub_explicitaccel_microaccel_654.publish(&rtb_BusAssignment7);
 
-  // Outputs for Atomic SubSystem: '<S1>/Publish5'
-  // MATLABSystem: '<S18>/SinkBlock'
-  Pub_explicitaccel_microaccel_612.publish(&rtb_BusAssignment4);
+    // End of Outputs for SubSystem: '<S1>/Publish7'
 
-  // End of Outputs for SubSystem: '<S1>/Publish5'
+    // BusAssignment: '<S1>/Bus Assignment8'
+    rtb_BusAssignment8.Data = rtb_v_des;
 
-  // BusAssignment: '<S1>/Bus Assignment7' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
+    // Outputs for Atomic SubSystem: '<S1>/Publish8'
+    // MATLABSystem: '<S21>/SinkBlock'
+    Pub_explicitaccel_microaccel_657.publish(&rtb_BusAssignment8);
 
-  rtb_BusAssignment7.Data = explicitaccel_microaccel_B.bsum;
+    // End of Outputs for SubSystem: '<S1>/Publish8'
 
-  // Outputs for Atomic SubSystem: '<S1>/Publish7'
-  // MATLABSystem: '<S20>/SinkBlock'
-  Pub_explicitaccel_microaccel_654.publish(&rtb_BusAssignment7);
+    // BusAssignment: '<S1>/Bus Assignment9'
+    rtb_BusAssignment9.Data = explicitaccel_microaccel_B.bsum;
 
-  // End of Outputs for SubSystem: '<S1>/Publish7'
+    // Outputs for Atomic SubSystem: '<S1>/Publish9'
+    // MATLABSystem: '<S22>/SinkBlock'
+    Pub_explicitaccel_microaccel_660.publish(&rtb_BusAssignment9);
 
-  // BusAssignment: '<S1>/Bus Assignment8' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
-
-  rtb_BusAssignment8.Data = u1;
-
-  // Outputs for Atomic SubSystem: '<S1>/Publish8'
-  // MATLABSystem: '<S21>/SinkBlock'
-  Pub_explicitaccel_microaccel_657.publish(&rtb_BusAssignment8);
-
-  // End of Outputs for SubSystem: '<S1>/Publish8'
-
-  // BusAssignment: '<S1>/Bus Assignment9' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
-
-  rtb_BusAssignment9.Data = explicitaccel_microaccel_B.value;
-
-  // Outputs for Atomic SubSystem: '<S1>/Publish9'
-  // MATLABSystem: '<S22>/SinkBlock'
-  Pub_explicitaccel_microaccel_660.publish(&rtb_BusAssignment9);
-
-  // End of Outputs for SubSystem: '<S1>/Publish9'
+    // End of Outputs for SubSystem: '<S1>/Publish9'
+  }
 
   // BusAssignment: '<S1>/Bus Assignment6' incorporates:
   //   MATLABSystem: '<S1>/Get Parameter1'
@@ -627,20 +734,56 @@ void explicitaccel_microaccel_step(void)
   Pub_explicitaccel_microaccel_635.publish(&rtb_BusAssignment6);
 
   // End of Outputs for SubSystem: '<S1>/Publish6'
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+    if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+      // Update for Memory: '<S1>/accel_memory'
+      explicitaccel_microaccel_DW.accel_memory_PreviousInput =
+        explicitaccel_microaccel_B.Switch;
 
-  // Update for Memory: '<S1>/accel_memory'
-  explicitaccel_microaccel_DW.accel_memory_PreviousInput =
-    explicitaccel_microaccel_B.Switch;
+      // Update for Memory: '<S1>/headway_memory'
+      explicitaccel_microaccel_DW.headway_memory_PreviousInput =
+        explicitaccel_microaccel_B.In1_i.Data;
 
-  // Update for Memory: '<S1>/headway_memory' incorporates:
-  //   MATLAB Function: '<S1>/MATLAB Function'
+      // Update for Memory: '<S1>/Memory'
+      explicitaccel_microaccel_DW.Memory_PreviousInput =
+        explicitaccel_microaccel_B.TotalTime2;
+    }
+  }                                    // end MajorTimeStep
 
-  explicitaccel_microaccel_DW.headway_memory_PreviousInput =
-    explicitaccel_microaccel_B.In1_i.Data;
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
+    rt_ertODEUpdateContinuousStates(&explicitaccel_microaccel_M->solverInfo);
 
-  // Update for Memory: '<S1>/Memory'
-  explicitaccel_microaccel_DW.Memory_PreviousInput =
-    explicitaccel_microaccel_B.TotalTime2;
+    // Update absolute time for base rate
+    // The "clockTick0" counts the number of times the code of this task has
+    //  been executed. The absolute time is the multiplication of "clockTick0"
+    //  and "Timing.stepSize0". Size of "clockTick0" ensures timer will not
+    //  overflow during the application lifespan selected.
+
+    ++explicitaccel_microaccel_M->Timing.clockTick0;
+    explicitaccel_microaccel_M->Timing.t[0] = rtsiGetSolverStopTime
+      (&explicitaccel_microaccel_M->solverInfo);
+
+    {
+      // Update absolute timer for sample time: [0.05s, 0.0s]
+      // The "clockTick1" counts the number of times the code of this task has
+      //  been executed. The resolution of this integer timer is 0.05, which is the step size
+      //  of the task. Size of "clockTick1" ensures timer will not overflow during the
+      //  application lifespan selected.
+
+      explicitaccel_microaccel_M->Timing.clockTick1++;
+    }
+  }                                    // end MajorTimeStep
+}
+
+// Derivatives for root system: '<Root>'
+void explicitaccel_microaccel_derivatives(void)
+{
+  XDot_explicitaccel_microaccel_T *_rtXdot;
+  _rtXdot = ((XDot_explicitaccel_microaccel_T *)
+             explicitaccel_microaccel_M->derivs);
+
+  // Derivatives for Integrator: '<S1>/Integrator'
+  _rtXdot->Integrator_CSTATE = explicitaccel_microaccel_B.Switch;
 }
 
 // Model initialize function
@@ -652,21 +795,63 @@ void explicitaccel_microaccel_initialize(void)
   rt_InitInfAndNaN(sizeof(real_T));
 
   {
+    // Setup solver object
+    rtsiSetSimTimeStepPtr(&explicitaccel_microaccel_M->solverInfo,
+                          &explicitaccel_microaccel_M->Timing.simTimeStep);
+    rtsiSetTPtr(&explicitaccel_microaccel_M->solverInfo, &rtmGetTPtr
+                (explicitaccel_microaccel_M));
+    rtsiSetStepSizePtr(&explicitaccel_microaccel_M->solverInfo,
+                       &explicitaccel_microaccel_M->Timing.stepSize0);
+    rtsiSetdXPtr(&explicitaccel_microaccel_M->solverInfo,
+                 &explicitaccel_microaccel_M->derivs);
+    rtsiSetContStatesPtr(&explicitaccel_microaccel_M->solverInfo, (real_T **)
+                         &explicitaccel_microaccel_M->contStates);
+    rtsiSetNumContStatesPtr(&explicitaccel_microaccel_M->solverInfo,
+      &explicitaccel_microaccel_M->Sizes.numContStates);
+    rtsiSetNumPeriodicContStatesPtr(&explicitaccel_microaccel_M->solverInfo,
+      &explicitaccel_microaccel_M->Sizes.numPeriodicContStates);
+    rtsiSetPeriodicContStateIndicesPtr(&explicitaccel_microaccel_M->solverInfo,
+      &explicitaccel_microaccel_M->periodicContStateIndices);
+    rtsiSetPeriodicContStateRangesPtr(&explicitaccel_microaccel_M->solverInfo,
+      &explicitaccel_microaccel_M->periodicContStateRanges);
+    rtsiSetErrorStatusPtr(&explicitaccel_microaccel_M->solverInfo,
+                          (&rtmGetErrorStatus(explicitaccel_microaccel_M)));
+    rtsiSetRTModelPtr(&explicitaccel_microaccel_M->solverInfo,
+                      explicitaccel_microaccel_M);
+  }
+
+  rtsiSetSimTimeStep(&explicitaccel_microaccel_M->solverInfo, MAJOR_TIME_STEP);
+  explicitaccel_microaccel_M->intgData.y = explicitaccel_microaccel_M->odeY;
+  explicitaccel_microaccel_M->intgData.f[0] = explicitaccel_microaccel_M->odeF[0];
+  explicitaccel_microaccel_M->intgData.f[1] = explicitaccel_microaccel_M->odeF[1];
+  explicitaccel_microaccel_M->intgData.f[2] = explicitaccel_microaccel_M->odeF[2];
+  explicitaccel_microaccel_M->contStates = ((X_explicitaccel_microaccel_T *)
+    &explicitaccel_microaccel_X);
+  rtsiSetSolverData(&explicitaccel_microaccel_M->solverInfo, static_cast<void *>
+                    (&explicitaccel_microaccel_M->intgData));
+  rtsiSetIsMinorTimeStepWithModeChange(&explicitaccel_microaccel_M->solverInfo,
+    false);
+  rtsiSetSolverName(&explicitaccel_microaccel_M->solverInfo,"ode3");
+  rtmSetTPtr(explicitaccel_microaccel_M,
+             &explicitaccel_microaccel_M->Timing.tArray[0]);
+  explicitaccel_microaccel_M->Timing.stepSize0 = 0.05;
+
+  {
     char_T b_zeroDelimTopic_2[13];
     char_T b_zeroDelimTopic_1[10];
     char_T b_zeroDelimTopic_3[9];
-    char_T b_zeroDelimTopic_0[8];
+    char_T b_zeroDelimTopic[8];
     char_T b_zeroDelimTopic_4[6];
-    char_T b_zeroDelimTopic[4];
-    static const char_T tmp[7] = { 'r', 'e', 'l', '_', 'v', 'e', 'l' };
+    char_T b_zeroDelimTopic_0[4];
+    static const char_T tmp[7] = { 'c', 'm', 'd', '_', 'v', 'e', 'l' };
 
-    static const char_T tmp_0[9] = { 'l', 'e', 'a', 'd', '_', 'd', 'i', 's', 't'
+    static const char_T tmp_0[7] = { 'r', 'e', 'l', '_', 'v', 'e', 'l' };
+
+    static const char_T tmp_1[9] = { 'l', 'e', 'a', 'd', '_', 'd', 'i', 's', 't'
     };
 
-    static const char_T tmp_1[12] = { 't', 'a', 'r', 'g', 'e', 't', '_', 's',
+    static const char_T tmp_2[12] = { 't', 'a', 'r', 'g', 'e', 't', '_', 's',
       'p', 'e', 'e', 'd' };
-
-    static const char_T tmp_2[7] = { 'c', 'm', 'd', '_', 'v', 'e', 'l' };
 
     static const char_T tmp_3[9] = { 'c', 'm', 'd', '_', 'a', 'c', 'c', 'e', 'l'
     };
@@ -695,6 +880,10 @@ void explicitaccel_microaccel_initialize(void)
     static const char_T tmp_c[16] = { 'u', 's', 'e', '_', 't', 'a', 'r', 'g',
       'e', 't', '_', 's', 'p', 'e', 'e', 'd' };
 
+    // InitializeConditions for Integrator: '<S1>/Integrator'
+    explicitaccel_microaccel_X.Integrator_CSTATE =
+      explicitaccel_microaccel_P.Integrator_IC;
+
     // InitializeConditions for Memory: '<S1>/accel_memory'
     explicitaccel_microaccel_DW.accel_memory_PreviousInput =
       explicitaccel_microaccel_P.accel_memory_InitialCondition;
@@ -706,6 +895,21 @@ void explicitaccel_microaccel_initialize(void)
     // InitializeConditions for Memory: '<S1>/Memory'
     explicitaccel_microaccel_DW.Memory_PreviousInput =
       explicitaccel_microaccel_P.Memory_InitialCondition;
+
+    // SystemInitialize for Atomic SubSystem: '<S1>/Publish1'
+    // Start for MATLABSystem: '<S14>/SinkBlock'
+    explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted = false;
+    explicitaccel_microaccel_DW.obj_c.isInitialized = 1;
+    for (int32_T i = 0; i < 7; i++) {
+      b_zeroDelimTopic[i] = tmp[i];
+    }
+
+    b_zeroDelimTopic[7] = '\x00';
+    Pub_explicitaccel_microaccel_592.createPublisher(&b_zeroDelimTopic[0], 1);
+    explicitaccel_microaccel_DW.obj_c.isSetupComplete = true;
+
+    // End of Start for MATLABSystem: '<S14>/SinkBlock'
+    // End of SystemInitialize for SubSystem: '<S1>/Publish1'
 
     // SystemInitialize for Atomic SubSystem: '<S1>/Subscribe8'
     // SystemInitialize for Enabled SubSystem: '<S26>/Enabled Subsystem'
@@ -719,11 +923,11 @@ void explicitaccel_microaccel_initialize(void)
     // Start for MATLABSystem: '<S26>/SourceBlock'
     explicitaccel_microaccel_DW.obj_ke.matlabCodegenIsDeleted = false;
     explicitaccel_microaccel_DW.obj_ke.isInitialized = 1;
-    b_zeroDelimTopic[0] = 'v';
-    b_zeroDelimTopic[1] = 'e';
-    b_zeroDelimTopic[2] = 'l';
-    b_zeroDelimTopic[3] = '\x00';
-    Sub_explicitaccel_microaccel_559.createSubscriber(&b_zeroDelimTopic[0], 1);
+    b_zeroDelimTopic_0[0] = 'v';
+    b_zeroDelimTopic_0[1] = 'e';
+    b_zeroDelimTopic_0[2] = 'l';
+    b_zeroDelimTopic_0[3] = '\x00';
+    Sub_explicitaccel_microaccel_559.createSubscriber(&b_zeroDelimTopic_0[0], 1);
     explicitaccel_microaccel_DW.obj_ke.isSetupComplete = true;
 
     // End of SystemInitialize for SubSystem: '<S1>/Subscribe8'
@@ -741,11 +945,11 @@ void explicitaccel_microaccel_initialize(void)
     explicitaccel_microaccel_DW.obj_hq.matlabCodegenIsDeleted = false;
     explicitaccel_microaccel_DW.obj_hq.isInitialized = 1;
     for (int32_T i = 0; i < 7; i++) {
-      b_zeroDelimTopic_0[i] = tmp[i];
+      b_zeroDelimTopic[i] = tmp_0[i];
     }
 
-    b_zeroDelimTopic_0[7] = '\x00';
-    Sub_explicitaccel_microaccel_624.createSubscriber(&b_zeroDelimTopic_0[0], 1);
+    b_zeroDelimTopic[7] = '\x00';
+    Sub_explicitaccel_microaccel_624.createSubscriber(&b_zeroDelimTopic[0], 1);
     explicitaccel_microaccel_DW.obj_hq.isSetupComplete = true;
 
     // End of Start for MATLABSystem: '<S24>/SourceBlock'
@@ -764,7 +968,7 @@ void explicitaccel_microaccel_initialize(void)
     explicitaccel_microaccel_DW.obj_n0.matlabCodegenIsDeleted = false;
     explicitaccel_microaccel_DW.obj_n0.isInitialized = 1;
     for (int32_T i = 0; i < 9; i++) {
-      b_zeroDelimTopic_1[i] = tmp_0[i];
+      b_zeroDelimTopic_1[i] = tmp_1[i];
     }
 
     b_zeroDelimTopic_1[9] = '\x00';
@@ -787,7 +991,7 @@ void explicitaccel_microaccel_initialize(void)
     explicitaccel_microaccel_DW.obj_ep.matlabCodegenIsDeleted = false;
     explicitaccel_microaccel_DW.obj_ep.isInitialized = 1;
     for (int32_T i = 0; i < 12; i++) {
-      b_zeroDelimTopic_2[i] = tmp_1[i];
+      b_zeroDelimTopic_2[i] = tmp_2[i];
     }
 
     b_zeroDelimTopic_2[12] = '\x00';
@@ -802,21 +1006,6 @@ void explicitaccel_microaccel_initialize(void)
     explicitaccel_microaccel_DW.previous_v_max = (rtNaN);
     explicitaccel_microaccel_DW.previous_dx = (rtNaN);
     explicitaccel_microaccel_DW.previous_lead_acc = (rtNaN);
-
-    // SystemInitialize for Atomic SubSystem: '<S1>/Publish1'
-    // Start for MATLABSystem: '<S14>/SinkBlock'
-    explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted = false;
-    explicitaccel_microaccel_DW.obj_c.isInitialized = 1;
-    for (int32_T i = 0; i < 7; i++) {
-      b_zeroDelimTopic_0[i] = tmp_2[i];
-    }
-
-    b_zeroDelimTopic_0[7] = '\x00';
-    Pub_explicitaccel_microaccel_592.createPublisher(&b_zeroDelimTopic_0[0], 1);
-    explicitaccel_microaccel_DW.obj_c.isSetupComplete = true;
-
-    // End of Start for MATLABSystem: '<S14>/SinkBlock'
-    // End of SystemInitialize for SubSystem: '<S1>/Publish1'
 
     // SystemInitialize for Atomic SubSystem: '<S1>/Publish2'
     // Start for MATLABSystem: '<S15>/SinkBlock'
@@ -981,6 +1170,15 @@ void explicitaccel_microaccel_initialize(void)
 // Model terminate function
 void explicitaccel_microaccel_terminate(void)
 {
+  // Terminate for Atomic SubSystem: '<S1>/Publish1'
+  // Terminate for MATLABSystem: '<S14>/SinkBlock'
+  if (!explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted) {
+    explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted = true;
+  }
+
+  // End of Terminate for MATLABSystem: '<S14>/SinkBlock'
+  // End of Terminate for SubSystem: '<S1>/Publish1'
+
   // Terminate for Atomic SubSystem: '<S1>/Subscribe8'
   // Terminate for MATLABSystem: '<S26>/SourceBlock'
   if (!explicitaccel_microaccel_DW.obj_ke.matlabCodegenIsDeleted) {
@@ -1030,15 +1228,6 @@ void explicitaccel_microaccel_terminate(void)
   }
 
   // End of Terminate for MATLABSystem: '<S1>/Get Parameter1'
-
-  // Terminate for Atomic SubSystem: '<S1>/Publish1'
-  // Terminate for MATLABSystem: '<S14>/SinkBlock'
-  if (!explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted) {
-    explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted = true;
-  }
-
-  // End of Terminate for MATLABSystem: '<S14>/SinkBlock'
-  // End of Terminate for SubSystem: '<S1>/Publish1'
 
   // Terminate for MATLABSystem: '<S1>/Current Time2'
   if (!explicitaccel_microaccel_DW.obj.matlabCodegenIsDeleted) {

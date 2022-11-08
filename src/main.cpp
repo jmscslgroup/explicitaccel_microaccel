@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.43
+// Model version                  : 6.51
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Thu Nov 03 22:38:16 2022
+// C/C++ source code generated on : Tue Nov 08 17:02:35 2022
 //
 
 #include <stdio.h>

@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.43
+// Model version                  : 6.51
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Thu Nov  3 22:38:09 2022
+// C/C++ source code generated on : Tue Nov  8 17:02:31 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -148,6 +148,11 @@ P_explicitaccel_microaccel_T explicitaccel_microaccel_P = {
   {
     0.0                                // Data
   },
+
+  // Expression: 0
+  //  Referenced by: '<S1>/Integrator'
+
+  0.0,
 
   // Expression: 0
   //  Referenced by: '<S1>/Constant'

@@ -75,13 +75,13 @@ endif()
 target_compile_options(explicitaccel_microaccel PUBLIC 
   $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:
   -DMODEL=explicitaccel_microaccel
-  -DNUMST=1
-  -DNCSTATES=0
+  -DNUMST=2
+  -DNCSTATES=1
   -DHAVESTDIO
   -DMODEL_HAS_DYNAMICALLY_LOADED_SFCNS=0
   -DCLASSIC_INTERFACE=0
   -DALLOCATIONFCN=0
-  -DTID01EQ=0
+  -DTID01EQ=1
   -DTERMFCN=1
   -DONESTEPFCN=1
   -DMAT_FILE=0
@@ -128,4 +128,4 @@ add_custom_command(
                    ARGS -E copy ${PROJECT_SOURCE_DIR}/src/${file_i} ${CATKIN_DEVEL_PREFIX}/explicitaccel_microaccel_ert_rtw/${file_i}
 				   )
 endforeach(file_i)
-# Generated on Thu Nov 03 22:38:17 2022
+# Generated on Tue Nov 08 17:02:36 2022
