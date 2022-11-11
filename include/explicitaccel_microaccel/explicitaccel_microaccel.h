@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.52
+// Model version                  : 6.65
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Thu Nov 10 21:51:12 2022
+// C/C++ source code generated on : Fri Nov 11 14:03:26 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -179,12 +179,12 @@ struct B_explicitaccel_microaccel_T {
   real_T Memory;                       // '<S1>/Memory'
   real_T Switch;                       // '<S1>/Switch'
   real_T accel;                        // '<S1>/MATLAB Function'
+  real_T a_vmax;                       // '<S1>/MATLAB Function'
   real_T lead_vel;
   real_T v_max_dot;
   real_T a_0;
   real_T a_12;
   real_T bsum;
-  real_T th;
   real_T ttc;
   real_T difference;
   real_T alpha;
@@ -196,6 +196,7 @@ struct B_explicitaccel_microaccel_T {
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 b_varargout_2;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 BusAssignment5;// '<S1>/Bus Assignment5' 
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 BusAssignment2;// '<S1>/Bus Assignment2' 
+  SL_Bus_explicitaccel_microaccel_std_msgs_Float64 BusAssignment3;// '<S1>/Bus Assignment3' 
 };
 
 // Block states (default storage) for system '<Root>'
@@ -219,12 +220,12 @@ struct DW_explicitaccel_microaccel_T {
   real_T accel_memory_PreviousInput;   // '<S1>/accel_memory'
   real_T headway_memory_PreviousInput; // '<S1>/headway_memory'
   real_T Memory_PreviousInput;         // '<S1>/Memory'
-  real_T previous_v_des;               // '<S1>/MATLAB Function'
   real_T previous_v_max;               // '<S1>/MATLAB Function'
   real_T previous_dx;                  // '<S1>/MATLAB Function'
   real_T previous_lead_acc;            // '<S1>/MATLAB Function'
-  real_T prev_vels[1280];              // '<S1>/MATLAB Function'
+  real_T prev_vels[2560];              // '<S1>/MATLAB Function'
   real_T t_length;                     // '<S1>/MATLAB Function'
+  real_T no_initial_signal;            // '<S1>/MATLAB Function'
   boolean_T previous_v_des_not_empty;  // '<S1>/MATLAB Function'
 };
 
