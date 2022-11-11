@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.51
+// Model version                  : 6.52
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Tue Nov  8 17:02:31 2022
+// C/C++ source code generated on : Thu Nov 10 21:51:12 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -153,42 +153,7 @@ void explicitaccel_microaccel_step(void)
       (&explicitaccel_microaccel_M->solverInfo);
   }
 
-  // BusAssignment: '<S1>/Bus Assignment1' incorporates:
-  //   Constant: '<S1>/Constant'
-  //   Constant: '<S2>/Constant'
-  //   Integrator: '<S1>/Integrator'
-
-  explicitaccel_microaccel_B.BusAssignment1 =
-    explicitaccel_microaccel_P.Constant_Value;
-  explicitaccel_microaccel_B.BusAssignment1.Linear.X =
-    explicitaccel_microaccel_X.Integrator_CSTATE;
-  explicitaccel_microaccel_B.BusAssignment1.Angular.Z =
-    explicitaccel_microaccel_P.Constant_Value_a;
-
-  // Outputs for Atomic SubSystem: '<S1>/Publish1'
-  // MATLABSystem: '<S14>/SinkBlock'
-  Pub_explicitaccel_microaccel_592.publish
-    (&explicitaccel_microaccel_B.BusAssignment1);
-
-  // End of Outputs for SubSystem: '<S1>/Publish1'
   if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
-    // Outputs for Atomic SubSystem: '<S1>/Subscribe8'
-    // MATLABSystem: '<S26>/SourceBlock'
-    b_varargout_1 = Sub_explicitaccel_microaccel_559.getLatestMessage
-      (&explicitaccel_microaccel_B.b_varargout_2);
-
-    // Outputs for Enabled SubSystem: '<S26>/Enabled Subsystem' incorporates:
-    //   EnablePort: '<S30>/Enable'
-
-    if (b_varargout_1) {
-      // SignalConversion generated from: '<S30>/In1'
-      explicitaccel_microaccel_B.In1 = explicitaccel_microaccel_B.b_varargout_2;
-    }
-
-    // End of MATLABSystem: '<S26>/SourceBlock'
-    // End of Outputs for SubSystem: '<S26>/Enabled Subsystem'
-    // End of Outputs for SubSystem: '<S1>/Subscribe8'
-
     // Outputs for Atomic SubSystem: '<S1>/Subscribe4'
     // MATLABSystem: '<S24>/SourceBlock'
     b_varargout_1 = Sub_explicitaccel_microaccel_624.getLatestMessage
@@ -207,10 +172,49 @@ void explicitaccel_microaccel_step(void)
     // End of Outputs for SubSystem: '<S24>/Enabled Subsystem'
     // End of Outputs for SubSystem: '<S1>/Subscribe4'
 
+    // Outputs for Atomic SubSystem: '<S1>/Subscribe8'
+    // MATLABSystem: '<S26>/SourceBlock'
+    b_varargout_1 = Sub_explicitaccel_microaccel_559.getLatestMessage
+      (&explicitaccel_microaccel_B.b_varargout_2);
+
+    // Outputs for Enabled SubSystem: '<S26>/Enabled Subsystem' incorporates:
+    //   EnablePort: '<S30>/Enable'
+
+    if (b_varargout_1) {
+      // SignalConversion generated from: '<S30>/In1'
+      explicitaccel_microaccel_B.In1 = explicitaccel_microaccel_B.b_varargout_2;
+    }
+
+    // End of MATLABSystem: '<S26>/SourceBlock'
+    // End of Outputs for SubSystem: '<S26>/Enabled Subsystem'
+    // End of Outputs for SubSystem: '<S1>/Subscribe8'
+
     // Sum: '<S1>/Subtract2'
     explicitaccel_microaccel_B.Subtract2 = explicitaccel_microaccel_B.In1_n.Data
       + explicitaccel_microaccel_B.In1.Data;
+  }
 
+  // BusAssignment: '<S1>/Bus Assignment1' incorporates:
+  //   Constant: '<S1>/Constant'
+  //   Constant: '<S2>/Constant'
+  //   Integrator: '<S1>/Integrator'
+
+  explicitaccel_microaccel_B.BusAssignment1 =
+    explicitaccel_microaccel_P.Constant_Value;
+  explicitaccel_microaccel_B.BusAssignment1.Linear.X =
+    explicitaccel_microaccel_X.Integrator_CSTATE;
+  explicitaccel_microaccel_B.BusAssignment1.Angular.Z =
+    explicitaccel_microaccel_P.Constant_Value_a;
+  explicitaccel_microaccel_B.BusAssignment1.Linear.Y =
+    explicitaccel_microaccel_B.Subtract2;
+
+  // Outputs for Atomic SubSystem: '<S1>/Publish1'
+  // MATLABSystem: '<S14>/SinkBlock'
+  Pub_explicitaccel_microaccel_592.publish
+    (&explicitaccel_microaccel_B.BusAssignment1);
+
+  // End of Outputs for SubSystem: '<S1>/Publish1'
+  if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
     // Outputs for Atomic SubSystem: '<S1>/Subscribe6'
     // MATLABSystem: '<S25>/SourceBlock'
     b_varargout_1 = Sub_explicitaccel_microaccel_562.getLatestMessage
@@ -843,9 +847,9 @@ void explicitaccel_microaccel_initialize(void)
     char_T b_zeroDelimTopic[8];
     char_T b_zeroDelimTopic_4[6];
     char_T b_zeroDelimTopic_0[4];
-    static const char_T tmp[7] = { 'c', 'm', 'd', '_', 'v', 'e', 'l' };
+    static const char_T tmp[7] = { 'r', 'e', 'l', '_', 'v', 'e', 'l' };
 
-    static const char_T tmp_0[7] = { 'r', 'e', 'l', '_', 'v', 'e', 'l' };
+    static const char_T tmp_0[7] = { 'c', 'm', 'd', '_', 'v', 'e', 'l' };
 
     static const char_T tmp_1[9] = { 'l', 'e', 'a', 'd', '_', 'd', 'i', 's', 't'
     };
@@ -896,20 +900,28 @@ void explicitaccel_microaccel_initialize(void)
     explicitaccel_microaccel_DW.Memory_PreviousInput =
       explicitaccel_microaccel_P.Memory_InitialCondition;
 
-    // SystemInitialize for Atomic SubSystem: '<S1>/Publish1'
-    // Start for MATLABSystem: '<S14>/SinkBlock'
-    explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted = false;
-    explicitaccel_microaccel_DW.obj_c.isInitialized = 1;
+    // SystemInitialize for Atomic SubSystem: '<S1>/Subscribe4'
+    // SystemInitialize for Enabled SubSystem: '<S24>/Enabled Subsystem'
+    // SystemInitialize for SignalConversion generated from: '<S28>/In1' incorporates:
+    //   Outport: '<S28>/Out1'
+
+    explicitaccel_microaccel_B.In1_n = explicitaccel_microaccel_P.Out1_Y0_k;
+
+    // End of SystemInitialize for SubSystem: '<S24>/Enabled Subsystem'
+
+    // Start for MATLABSystem: '<S24>/SourceBlock'
+    explicitaccel_microaccel_DW.obj_hq.matlabCodegenIsDeleted = false;
+    explicitaccel_microaccel_DW.obj_hq.isInitialized = 1;
     for (int32_T i = 0; i < 7; i++) {
       b_zeroDelimTopic[i] = tmp[i];
     }
 
     b_zeroDelimTopic[7] = '\x00';
-    Pub_explicitaccel_microaccel_592.createPublisher(&b_zeroDelimTopic[0], 1);
-    explicitaccel_microaccel_DW.obj_c.isSetupComplete = true;
+    Sub_explicitaccel_microaccel_624.createSubscriber(&b_zeroDelimTopic[0], 1);
+    explicitaccel_microaccel_DW.obj_hq.isSetupComplete = true;
 
-    // End of Start for MATLABSystem: '<S14>/SinkBlock'
-    // End of SystemInitialize for SubSystem: '<S1>/Publish1'
+    // End of Start for MATLABSystem: '<S24>/SourceBlock'
+    // End of SystemInitialize for SubSystem: '<S1>/Subscribe4'
 
     // SystemInitialize for Atomic SubSystem: '<S1>/Subscribe8'
     // SystemInitialize for Enabled SubSystem: '<S26>/Enabled Subsystem'
@@ -932,28 +944,20 @@ void explicitaccel_microaccel_initialize(void)
 
     // End of SystemInitialize for SubSystem: '<S1>/Subscribe8'
 
-    // SystemInitialize for Atomic SubSystem: '<S1>/Subscribe4'
-    // SystemInitialize for Enabled SubSystem: '<S24>/Enabled Subsystem'
-    // SystemInitialize for SignalConversion generated from: '<S28>/In1' incorporates:
-    //   Outport: '<S28>/Out1'
-
-    explicitaccel_microaccel_B.In1_n = explicitaccel_microaccel_P.Out1_Y0_k;
-
-    // End of SystemInitialize for SubSystem: '<S24>/Enabled Subsystem'
-
-    // Start for MATLABSystem: '<S24>/SourceBlock'
-    explicitaccel_microaccel_DW.obj_hq.matlabCodegenIsDeleted = false;
-    explicitaccel_microaccel_DW.obj_hq.isInitialized = 1;
+    // SystemInitialize for Atomic SubSystem: '<S1>/Publish1'
+    // Start for MATLABSystem: '<S14>/SinkBlock'
+    explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted = false;
+    explicitaccel_microaccel_DW.obj_c.isInitialized = 1;
     for (int32_T i = 0; i < 7; i++) {
       b_zeroDelimTopic[i] = tmp_0[i];
     }
 
     b_zeroDelimTopic[7] = '\x00';
-    Sub_explicitaccel_microaccel_624.createSubscriber(&b_zeroDelimTopic[0], 1);
-    explicitaccel_microaccel_DW.obj_hq.isSetupComplete = true;
+    Pub_explicitaccel_microaccel_592.createPublisher(&b_zeroDelimTopic[0], 1);
+    explicitaccel_microaccel_DW.obj_c.isSetupComplete = true;
 
-    // End of Start for MATLABSystem: '<S24>/SourceBlock'
-    // End of SystemInitialize for SubSystem: '<S1>/Subscribe4'
+    // End of Start for MATLABSystem: '<S14>/SinkBlock'
+    // End of SystemInitialize for SubSystem: '<S1>/Publish1'
 
     // SystemInitialize for Atomic SubSystem: '<S1>/Subscribe6'
     // SystemInitialize for Enabled SubSystem: '<S25>/Enabled Subsystem'
@@ -1170,14 +1174,14 @@ void explicitaccel_microaccel_initialize(void)
 // Model terminate function
 void explicitaccel_microaccel_terminate(void)
 {
-  // Terminate for Atomic SubSystem: '<S1>/Publish1'
-  // Terminate for MATLABSystem: '<S14>/SinkBlock'
-  if (!explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted) {
-    explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted = true;
+  // Terminate for Atomic SubSystem: '<S1>/Subscribe4'
+  // Terminate for MATLABSystem: '<S24>/SourceBlock'
+  if (!explicitaccel_microaccel_DW.obj_hq.matlabCodegenIsDeleted) {
+    explicitaccel_microaccel_DW.obj_hq.matlabCodegenIsDeleted = true;
   }
 
-  // End of Terminate for MATLABSystem: '<S14>/SinkBlock'
-  // End of Terminate for SubSystem: '<S1>/Publish1'
+  // End of Terminate for MATLABSystem: '<S24>/SourceBlock'
+  // End of Terminate for SubSystem: '<S1>/Subscribe4'
 
   // Terminate for Atomic SubSystem: '<S1>/Subscribe8'
   // Terminate for MATLABSystem: '<S26>/SourceBlock'
@@ -1188,14 +1192,14 @@ void explicitaccel_microaccel_terminate(void)
   // End of Terminate for MATLABSystem: '<S26>/SourceBlock'
   // End of Terminate for SubSystem: '<S1>/Subscribe8'
 
-  // Terminate for Atomic SubSystem: '<S1>/Subscribe4'
-  // Terminate for MATLABSystem: '<S24>/SourceBlock'
-  if (!explicitaccel_microaccel_DW.obj_hq.matlabCodegenIsDeleted) {
-    explicitaccel_microaccel_DW.obj_hq.matlabCodegenIsDeleted = true;
+  // Terminate for Atomic SubSystem: '<S1>/Publish1'
+  // Terminate for MATLABSystem: '<S14>/SinkBlock'
+  if (!explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted) {
+    explicitaccel_microaccel_DW.obj_c.matlabCodegenIsDeleted = true;
   }
 
-  // End of Terminate for MATLABSystem: '<S24>/SourceBlock'
-  // End of Terminate for SubSystem: '<S1>/Subscribe4'
+  // End of Terminate for MATLABSystem: '<S14>/SinkBlock'
+  // End of Terminate for SubSystem: '<S1>/Publish1'
 
   // Terminate for Atomic SubSystem: '<S1>/Subscribe6'
   // Terminate for MATLABSystem: '<S25>/SourceBlock'
