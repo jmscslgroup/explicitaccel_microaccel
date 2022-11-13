@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.68
+// Model version                  : 6.70
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Sun Nov 13 13:57:46 2022
+// C/C++ source code generated on : Sun Nov 13 18:38:24 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -946,7 +946,7 @@ void explicitaccel_microaccel_initialize(void)
   explicitaccel_microaccel_M->Timing.stepSize0 = 0.05;
 
   {
-    char_T b_zeroDelimTopic_2[13];
+    char_T b_zeroDelimTopic_2[16];
     char_T b_zeroDelimTopic_1[10];
     char_T b_zeroDelimTopic_3[9];
     char_T b_zeroDelimTopic[8];
@@ -959,8 +959,8 @@ void explicitaccel_microaccel_initialize(void)
     static const char_T tmp_1[9] = { 'l', 'e', 'a', 'd', '_', 'd', 'i', 's', 't'
     };
 
-    static const char_T tmp_2[12] = { 't', 'a', 'r', 'g', 'e', 't', '_', 's',
-      'p', 'e', 'e', 'd' };
+    static const char_T tmp_2[15] = { 's', 'p', '/', 't', 'a', 'r', 'g', 'e',
+      't', '_', 's', 'p', 'e', 'e', 'd' };
 
     static const char_T tmp_3[9] = { 'c', 'm', 'd', '_', 'a', 'c', 'c', 'e', 'l'
     };
@@ -1099,11 +1099,11 @@ void explicitaccel_microaccel_initialize(void)
     // Start for MATLABSystem: '<S23>/SourceBlock'
     explicitaccel_microaccel_DW.obj_ep.matlabCodegenIsDeleted = false;
     explicitaccel_microaccel_DW.obj_ep.isInitialized = 1;
-    for (int32_T i = 0; i < 12; i++) {
+    for (int32_T i = 0; i < 15; i++) {
       b_zeroDelimTopic_2[i] = tmp_2[i];
     }
 
-    b_zeroDelimTopic_2[12] = '\x00';
+    b_zeroDelimTopic_2[15] = '\x00';
     Sub_explicitaccel_microaccel_599.createSubscriber(&b_zeroDelimTopic_2[0], 1);
     explicitaccel_microaccel_DW.obj_ep.isSetupComplete = true;
 
@@ -1226,12 +1226,11 @@ void explicitaccel_microaccel_initialize(void)
     explicitaccel_microaccel_DW.obj_g.matlabCodegenIsDeleted = false;
     explicitaccel_microaccel_DW.obj_g.isInitialized = 1;
     for (int32_T i = 0; i < 15; i++) {
-      explicitaccel_microaccel_B.b_zeroDelimTopic[i] = tmp_a[i];
+      b_zeroDelimTopic_2[i] = tmp_a[i];
     }
 
-    explicitaccel_microaccel_B.b_zeroDelimTopic[15] = '\x00';
-    Pub_explicitaccel_microaccel_635.createPublisher
-      (&explicitaccel_microaccel_B.b_zeroDelimTopic[0], 1);
+    b_zeroDelimTopic_2[15] = '\x00';
+    Pub_explicitaccel_microaccel_635.createPublisher(&b_zeroDelimTopic_2[0], 1);
     explicitaccel_microaccel_DW.obj_g.isSetupComplete = true;
 
     // End of Start for MATLABSystem: '<S19>/SinkBlock'

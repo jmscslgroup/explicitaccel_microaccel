@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.68
+// Model version                  : 6.70
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Sun Nov 13 13:57:46 2022
+// C/C++ source code generated on : Sun Nov 13 18:38:24 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -170,7 +170,6 @@ extern "C"
 struct B_explicitaccel_microaccel_T {
   SL_Bus_explicitaccel_microaccel_geometry_msgs_Twist BusAssignment1;// '<S1>/Bus Assignment1' 
   char_T b_zeroDelimName[17];
-  char_T b_zeroDelimTopic[16];
   SL_Bus_explicitaccel_microaccel_ros_time_Time r;
   real_T Subtract2;                    // '<S1>/Subtract2'
   real_T accel_memory;                 // '<S1>/accel_memory'
