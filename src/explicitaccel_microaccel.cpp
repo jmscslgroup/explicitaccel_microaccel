@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.70
+// Model version                  : 6.71
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Sun Nov 13 18:38:24 2022
+// C/C++ source code generated on : Sun Nov 13 20:33:42 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -255,17 +255,18 @@ void explicitaccel_microaccel_step(void)
     // End of Outputs for SubSystem: '<S1>/Subscribe'
   }
 
-  // MATLABSystem: '<S1>/Get Parameter1'
-  ParamGet_explicitaccel_microaccel_631.get_parameter(&b_varargout_1);
+  // BusAssignment: '<S1>/Bus Assignment6' incorporates:
+  //   MATLABSystem: '<S1>/Get Parameter1'
+
+  ParamGet_explicitaccel_microaccel_631.get_parameter(&rtb_BusAssignment6.Data);
   if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
     // MATLAB Function: '<S1>/MATLAB Function' incorporates:
     //   MATLABSystem: '<S1>/Get Parameter'
-    //   MATLABSystem: '<S1>/Get Parameter1'
 
     explicitaccel_microaccel_B.lead_vel = explicitaccel_microaccel_B.Subtract2;
     explicitaccel_microaccel_B.a_vdes = explicitaccel_microaccel_B.In1_i.Data;
     rtb_v_des = explicitaccel_microaccel_B.In1_b.Data;
-    if ((!b_varargout_1) || (explicitaccel_microaccel_B.In1_b.Data == 0.0)) {
+    if (explicitaccel_microaccel_B.In1_b.Data == 0.0) {
       rtb_v_des = -1.0;
     }
 
@@ -832,11 +833,6 @@ void explicitaccel_microaccel_step(void)
 
     // End of Outputs for SubSystem: '<S1>/Publish9'
   }
-
-  // BusAssignment: '<S1>/Bus Assignment6' incorporates:
-  //   MATLABSystem: '<S1>/Get Parameter1'
-
-  rtb_BusAssignment6.Data = b_varargout_1;
 
   // Outputs for Atomic SubSystem: '<S1>/Publish6'
   // MATLABSystem: '<S19>/SinkBlock'
