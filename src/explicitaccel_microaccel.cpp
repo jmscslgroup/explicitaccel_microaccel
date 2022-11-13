@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.67
+// Model version                  : 6.68
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Sun Nov 13 03:51:58 2022
+// C/C++ source code generated on : Sun Nov 13 13:57:46 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -487,7 +487,6 @@ void explicitaccel_microaccel_step(void)
         explicitaccel_microaccel_DW.prev_lead_acc_not_empty = true;
         explicitaccel_microaccel_DW.prev_lead_acc[19] =
           explicitaccel_microaccel_DW.previous_lead_acc;
-        explicitaccel_microaccel_DW.t_length_acc = 1.0;
       } else {
         for (t_length = 0; t_length < 19; t_length++) {
           explicitaccel_microaccel_DW.prev_lead_acc[t_length] =
@@ -496,20 +495,29 @@ void explicitaccel_microaccel_step(void)
 
         explicitaccel_microaccel_DW.prev_lead_acc[19] =
           explicitaccel_microaccel_DW.previous_lead_acc;
-        if (explicitaccel_microaccel_DW.t_length_acc < 20.0) {
-          explicitaccel_microaccel_DW.t_length_acc++;
+      }
+
+      t_length = 0;
+      for (int32_T i = 0; i < 20; i++) {
+        if (explicitaccel_microaccel_DW.prev_lead_acc[i] != 0.0) {
+          t_length++;
         }
       }
 
-      explicitaccel_microaccel_B.a_0 =
-        explicitaccel_microaccel_DW.prev_lead_acc[0];
-      for (t_length = 0; t_length < 19; t_length++) {
-        explicitaccel_microaccel_B.a_0 +=
-          explicitaccel_microaccel_DW.prev_lead_acc[t_length + 1];
+      if (t_length == 0) {
+        explicitaccel_microaccel_B.lead_acc_avg = 0.0;
+      } else {
+        explicitaccel_microaccel_B.a_0 =
+          explicitaccel_microaccel_DW.prev_lead_acc[0];
+        for (int32_T i = 0; i < 19; i++) {
+          explicitaccel_microaccel_B.a_0 +=
+            explicitaccel_microaccel_DW.prev_lead_acc[i + 1];
+        }
+
+        explicitaccel_microaccel_B.lead_acc_avg = explicitaccel_microaccel_B.a_0
+          / static_cast<real_T>(t_length);
       }
 
-      explicitaccel_microaccel_B.lead_acc_avg = explicitaccel_microaccel_B.a_0 /
-        explicitaccel_microaccel_DW.t_length_acc;
       if (explicitaccel_microaccel_B.lead_acc_avg < 0.0) {
         explicitaccel_microaccel_B.a_0 = explicitaccel_microaccel_B.lead_acc_avg
           * explicitaccel_microaccel_B.In1.Data /

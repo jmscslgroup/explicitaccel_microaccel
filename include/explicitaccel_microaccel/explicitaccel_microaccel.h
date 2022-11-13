@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.67
+// Model version                  : 6.68
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Sun Nov 13 03:51:58 2022
+// C/C++ source code generated on : Sun Nov 13 13:57:46 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -226,7 +226,6 @@ struct DW_explicitaccel_microaccel_T {
   real_T prev_vels[2560];              // '<S1>/MATLAB Function'
   real_T no_initial_signal;            // '<S1>/MATLAB Function'
   real_T prev_lead_acc[20];            // '<S1>/MATLAB Function'
-  real_T t_length_acc;                 // '<S1>/MATLAB Function'
   real_T previous_lead_vel_real;       // '<S1>/MATLAB Function'
   boolean_T previous_v_des_not_empty;  // '<S1>/MATLAB Function'
   boolean_T prev_lead_acc_not_empty;   // '<S1>/MATLAB Function'
