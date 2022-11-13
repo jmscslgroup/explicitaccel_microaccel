@@ -58,6 +58,7 @@ file(GLOB ${PROJECT_NAME}_C_SOURCES RELATIVE ${PROJECT_SOURCE_DIR} ${PROJECT_SOU
 file(GLOB ${PROJECT_NAME}_CPP_SOURCES RELATIVE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/*.cpp)
 # Declare executable - Node
 add_executable(explicitaccel_microaccel
+  src/slros_generic_param.cpp
   src/explicitaccel_microaccel.cpp
   src/explicitaccel_microaccel_data.cpp
   src/main.cpp
@@ -67,7 +68,6 @@ add_executable(explicitaccel_microaccel
   src/rt_nonfinite.cpp
   src/slros_busmsg_conversion.cpp
   src/slros_initialize.cpp
-  src/slros_generic_param.cpp
 )
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 #target_compile_options(explicitaccel_microaccel PUBLIC  $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>: -Wall -Wextra -Wpedantic >)
@@ -128,4 +128,4 @@ add_custom_command(
                    ARGS -E copy ${PROJECT_SOURCE_DIR}/src/${file_i} ${CATKIN_DEVEL_PREFIX}/explicitaccel_microaccel_ert_rtw/${file_i}
 				   )
 endforeach(file_i)
-# Generated on Fri Nov 11 14:03:34 2022
+# Generated on Sun Nov 13 03:54:06 2022

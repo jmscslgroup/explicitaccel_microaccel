@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.65
+// Model version                  : 6.67
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Fri Nov 11 14:03:26 2022
+// C/C++ source code generated on : Sun Nov 13 03:51:58 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)

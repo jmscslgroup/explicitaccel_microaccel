@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.65
+// Model version                  : 6.67
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Fri Nov 11 14:03:26 2022
+// C/C++ source code generated on : Sun Nov 13 03:51:58 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -182,10 +182,10 @@ struct B_explicitaccel_microaccel_T {
   real_T a_vmax;                       // '<S1>/MATLAB Function'
   real_T lead_vel;
   real_T v_max_dot;
+  real_T lead_acc_avg;
   real_T a_0;
   real_T a_12;
   real_T bsum;
-  real_T ttc;
   real_T difference;
   real_T alpha;
   real_T a_vdes;                       // '<S1>/MATLAB Function'
@@ -224,9 +224,12 @@ struct DW_explicitaccel_microaccel_T {
   real_T previous_dx;                  // '<S1>/MATLAB Function'
   real_T previous_lead_acc;            // '<S1>/MATLAB Function'
   real_T prev_vels[2560];              // '<S1>/MATLAB Function'
-  real_T t_length;                     // '<S1>/MATLAB Function'
   real_T no_initial_signal;            // '<S1>/MATLAB Function'
+  real_T prev_lead_acc[20];            // '<S1>/MATLAB Function'
+  real_T t_length_acc;                 // '<S1>/MATLAB Function'
+  real_T previous_lead_vel_real;       // '<S1>/MATLAB Function'
   boolean_T previous_v_des_not_empty;  // '<S1>/MATLAB Function'
+  boolean_T prev_lead_acc_not_empty;   // '<S1>/MATLAB Function'
 };
 
 // Continuous states (default storage)
