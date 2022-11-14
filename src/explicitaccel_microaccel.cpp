@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.80
+// Model version                  : 6.82
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Mon Nov 14 14:59:53 2022
+// C/C++ source code generated on : Mon Nov 14 15:38:44 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -359,6 +359,22 @@ void explicitaccel_microaccel_step(void)
       }
     }
 
+    if (!(rtb_v_des >= 8.0)) {
+      rtb_v_des = 8.0;
+    }
+
+    if (!(rtb_v_des <= 20.0)) {
+      rtb_v_des = 20.0;
+    }
+
+    if ((explicitaccel_microaccel_B.a_vdes - 45.0 <= 0.0) || rtIsNaN
+        (explicitaccel_microaccel_B.a_vdes - 45.0)) {
+      explicitaccel_microaccel_B.a_12 = 0.0;
+    } else {
+      explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes - 45.0;
+    }
+
+    rtb_v_des += 0.3 * explicitaccel_microaccel_B.a_12;
     if (rtIsNaN(explicitaccel_microaccel_B.lead_vel) ||
         ((explicitaccel_microaccel_B.a_vdes == 252.0) &&
          (explicitaccel_microaccel_DW.previous_dx > 220.0)) ||
