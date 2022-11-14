@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.79
+// Model version                  : 6.80
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Mon Nov 14 14:00:45 2022
+// C/C++ source code generated on : Mon Nov 14 14:59:53 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -131,11 +131,11 @@ static void rt_ertODEUpdateContinuousStates(RTWSolverInfo *si )
 void explicitaccel_microaccel_step(void)
 {
   SL_Bus_explicitaccel_microaccel_std_msgs_Bool rtb_BusAssignment6;
-  SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment3;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment4;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment7;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment8;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment9;
+  real_T rtb_v_des;
   int32_T t_length;
   boolean_T b_varargout_1;
   if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
@@ -316,13 +316,11 @@ void explicitaccel_microaccel_step(void)
     explicitaccel_microaccel_DW.previous_lead_vel_real =
       explicitaccel_microaccel_B.lead_vel;
     if (t_length == 0) {
-      explicitaccel_microaccel_B.target_speed = 30.0;
+      rtb_v_des = 30.0;
     } else {
-      explicitaccel_microaccel_B.target_speed =
-        explicitaccel_microaccel_DW.prev_vels[0];
+      rtb_v_des = explicitaccel_microaccel_DW.prev_vels[0];
       for (int32_T i = 0; i < 1023; i++) {
-        explicitaccel_microaccel_B.target_speed +=
-          explicitaccel_microaccel_DW.prev_vels[i + 1];
+        rtb_v_des += explicitaccel_microaccel_DW.prev_vels[i + 1];
       }
 
       for (int32_T i = 0; i < 2; i++) {
@@ -342,36 +340,10 @@ void explicitaccel_microaccel_step(void)
             explicitaccel_microaccel_DW.prev_vels[(xblockoffset + e_k) - 1];
         }
 
-        explicitaccel_microaccel_B.target_speed +=
-          explicitaccel_microaccel_B.bsum;
+        rtb_v_des += explicitaccel_microaccel_B.bsum;
       }
 
-      explicitaccel_microaccel_B.target_speed /= static_cast<real_T>(t_length);
-    }
-
-    explicitaccel_microaccel_B.bsum = 3.0 * explicitaccel_microaccel_B.In1.Data;
-    if (!(explicitaccel_microaccel_B.bsum >= 30.0)) {
-      explicitaccel_microaccel_B.bsum = 30.0;
-    }
-
-    if ((explicitaccel_microaccel_B.In1.Data <= 1.0) || rtIsNaN
-        (explicitaccel_microaccel_B.In1.Data)) {
-      explicitaccel_microaccel_B.a_12 = 1.0;
-    } else {
-      explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data;
-    }
-
-    explicitaccel_microaccel_B.a_0 = (explicitaccel_microaccel_B.a_vdes -
-      explicitaccel_microaccel_B.bsum) / explicitaccel_microaccel_B.a_12;
-    if ((explicitaccel_microaccel_B.a_0 <= 0.0) || rtIsNaN
-        (explicitaccel_microaccel_B.a_0)) {
-      explicitaccel_microaccel_B.a_0 = 0.0;
-    }
-
-    explicitaccel_microaccel_B.target_speed += explicitaccel_microaccel_B.a_0 *
-      explicitaccel_microaccel_B.a_0 * 0.1;
-    if (!(explicitaccel_microaccel_B.target_speed <= 35.0)) {
-      explicitaccel_microaccel_B.target_speed = 35.0;
+      rtb_v_des /= static_cast<real_T>(t_length);
     }
 
     if ((explicitaccel_microaccel_DW.prev_vels[2558] == 0.0) ||
@@ -396,7 +368,7 @@ void explicitaccel_microaccel_step(void)
       explicitaccel_microaccel_B.bsum = 30.0;
       if (rtIsNaN(explicitaccel_microaccel_B.lead_vel) ||
           (explicitaccel_microaccel_DW.no_initial_signal == 1.0)) {
-        explicitaccel_microaccel_B.target_speed = 30.0;
+        rtb_v_des = 30.0;
       }
     } else {
       if (rtIsNaN(explicitaccel_microaccel_DW.previous_dx)) {
@@ -561,7 +533,7 @@ void explicitaccel_microaccel_step(void)
     }
 
     explicitaccel_microaccel_B.a_vdes = -(explicitaccel_microaccel_B.In1.Data -
-      explicitaccel_microaccel_B.target_speed);
+      rtb_v_des);
     if (!(explicitaccel_microaccel_B.a_vdes >= -0.4)) {
       explicitaccel_microaccel_B.a_vdes = -0.4;
     }
@@ -733,11 +705,13 @@ void explicitaccel_microaccel_step(void)
     // End of Outputs for SubSystem: '<S1>/Publish3'
 
     // BusAssignment: '<S1>/Bus Assignment3'
-    rtb_BusAssignment3.Data = explicitaccel_microaccel_B.a_vmax;
+    explicitaccel_microaccel_B.BusAssignment3.Data =
+      explicitaccel_microaccel_B.a_vmax;
 
     // Outputs for Atomic SubSystem: '<S1>/Publish4'
     // MATLABSystem: '<S17>/SinkBlock'
-    Pub_explicitaccel_microaccel_611.publish(&rtb_BusAssignment3);
+    Pub_explicitaccel_microaccel_611.publish
+      (&explicitaccel_microaccel_B.BusAssignment3);
 
     // End of Outputs for SubSystem: '<S1>/Publish4'
 
@@ -760,7 +734,7 @@ void explicitaccel_microaccel_step(void)
     // End of Outputs for SubSystem: '<S1>/Publish7'
 
     // BusAssignment: '<S1>/Bus Assignment8'
-    rtb_BusAssignment8.Data = explicitaccel_microaccel_B.target_speed;
+    rtb_BusAssignment8.Data = rtb_v_des;
 
     // Outputs for Atomic SubSystem: '<S1>/Publish8'
     // MATLABSystem: '<S21>/SinkBlock'
