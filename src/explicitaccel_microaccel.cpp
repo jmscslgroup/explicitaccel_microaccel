@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.78
+// Model version                  : 6.79
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Mon Nov 14 13:47:21 2022
+// C/C++ source code generated on : Mon Nov 14 14:00:45 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -131,11 +131,11 @@ static void rt_ertODEUpdateContinuousStates(RTWSolverInfo *si )
 void explicitaccel_microaccel_step(void)
 {
   SL_Bus_explicitaccel_microaccel_std_msgs_Bool rtb_BusAssignment6;
+  SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment3;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment4;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment7;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment8;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 rtb_BusAssignment9;
-  real_T rtb_v_des;
   int32_T t_length;
   boolean_T b_varargout_1;
   if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
@@ -238,20 +238,9 @@ void explicitaccel_microaccel_step(void)
   if (rtmIsMajorTimeStep(explicitaccel_microaccel_M)) {
     // Outputs for Atomic SubSystem: '<S1>/Subscribe'
     // MATLABSystem: '<S23>/SourceBlock'
-    b_varargout_1 = Sub_explicitaccel_microaccel_599.getLatestMessage
+    Sub_explicitaccel_microaccel_599.getLatestMessage
       (&explicitaccel_microaccel_B.b_varargout_2);
 
-    // Outputs for Enabled SubSystem: '<S23>/Enabled Subsystem' incorporates:
-    //   EnablePort: '<S27>/Enable'
-
-    if (b_varargout_1) {
-      // SignalConversion generated from: '<S27>/In1'
-      explicitaccel_microaccel_B.In1_b =
-        explicitaccel_microaccel_B.b_varargout_2;
-    }
-
-    // End of MATLABSystem: '<S23>/SourceBlock'
-    // End of Outputs for SubSystem: '<S23>/Enabled Subsystem'
     // End of Outputs for SubSystem: '<S1>/Subscribe'
   }
 
@@ -265,11 +254,6 @@ void explicitaccel_microaccel_step(void)
 
     explicitaccel_microaccel_B.lead_vel = explicitaccel_microaccel_B.Subtract2;
     explicitaccel_microaccel_B.a_vdes = explicitaccel_microaccel_B.In1_i.Data;
-    rtb_v_des = explicitaccel_microaccel_B.In1_b.Data;
-    if (explicitaccel_microaccel_B.In1_b.Data == 0.0) {
-      rtb_v_des = -1.0;
-    }
-
     if (explicitaccel_microaccel_B.Subtract2 == 0.0) {
       explicitaccel_microaccel_B.lead_vel = 0.2;
     }
@@ -331,80 +315,63 @@ void explicitaccel_microaccel_step(void)
 
     explicitaccel_microaccel_DW.previous_lead_vel_real =
       explicitaccel_microaccel_B.lead_vel;
-    if (rtb_v_des == -1.0) {
-      if (t_length == 0) {
-        rtb_v_des = 30.0;
-      } else {
-        rtb_v_des = explicitaccel_microaccel_DW.prev_vels[0];
-        for (int32_T i = 0; i < 1023; i++) {
-          rtb_v_des += explicitaccel_microaccel_DW.prev_vels[i + 1];
+    if (t_length == 0) {
+      explicitaccel_microaccel_B.target_speed = 30.0;
+    } else {
+      explicitaccel_microaccel_B.target_speed =
+        explicitaccel_microaccel_DW.prev_vels[0];
+      for (int32_T i = 0; i < 1023; i++) {
+        explicitaccel_microaccel_B.target_speed +=
+          explicitaccel_microaccel_DW.prev_vels[i + 1];
+      }
+
+      for (int32_T i = 0; i < 2; i++) {
+        int32_T hi;
+        int32_T xblockoffset;
+        xblockoffset = (i + 1) << 10;
+        explicitaccel_microaccel_B.bsum =
+          explicitaccel_microaccel_DW.prev_vels[xblockoffset];
+        if (i + 2 == 3) {
+          hi = 512;
+        } else {
+          hi = 1024;
         }
 
-        for (int32_T i = 0; i < 2; i++) {
-          int32_T hi;
-          int32_T xblockoffset;
-          xblockoffset = (i + 1) << 10;
-          explicitaccel_microaccel_B.bsum =
-            explicitaccel_microaccel_DW.prev_vels[xblockoffset];
-          if (i + 2 == 3) {
-            hi = 512;
-          } else {
-            hi = 1024;
-          }
-
-          for (int32_T e_k = 2; e_k <= hi; e_k++) {
-            explicitaccel_microaccel_B.bsum +=
-              explicitaccel_microaccel_DW.prev_vels[(xblockoffset + e_k) - 1];
-          }
-
-          rtb_v_des += explicitaccel_microaccel_B.bsum;
+        for (int32_T e_k = 2; e_k <= hi; e_k++) {
+          explicitaccel_microaccel_B.bsum +=
+            explicitaccel_microaccel_DW.prev_vels[(xblockoffset + e_k) - 1];
         }
 
-        rtb_v_des /= static_cast<real_T>(t_length);
+        explicitaccel_microaccel_B.target_speed +=
+          explicitaccel_microaccel_B.bsum;
       }
 
-      explicitaccel_microaccel_B.bsum = 3.0 *
-        explicitaccel_microaccel_B.In1.Data;
-      if (!(explicitaccel_microaccel_B.bsum >= 30.0)) {
-        explicitaccel_microaccel_B.bsum = 30.0;
-      }
+      explicitaccel_microaccel_B.target_speed /= static_cast<real_T>(t_length);
+    }
 
-      if ((explicitaccel_microaccel_B.In1.Data <= 1.0) || rtIsNaN
-          (explicitaccel_microaccel_B.In1.Data)) {
-        explicitaccel_microaccel_B.a_12 = 1.0;
-      } else {
-        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data;
-      }
+    explicitaccel_microaccel_B.bsum = 3.0 * explicitaccel_microaccel_B.In1.Data;
+    if (!(explicitaccel_microaccel_B.bsum >= 30.0)) {
+      explicitaccel_microaccel_B.bsum = 30.0;
+    }
 
-      explicitaccel_microaccel_B.a_0 = (explicitaccel_microaccel_B.a_vdes -
-        explicitaccel_microaccel_B.bsum) / explicitaccel_microaccel_B.a_12;
-      if ((explicitaccel_microaccel_B.a_0 <= 0.0) || rtIsNaN
-          (explicitaccel_microaccel_B.a_0)) {
-        explicitaccel_microaccel_B.a_0 = 0.0;
-      }
+    if ((explicitaccel_microaccel_B.In1.Data <= 1.0) || rtIsNaN
+        (explicitaccel_microaccel_B.In1.Data)) {
+      explicitaccel_microaccel_B.a_12 = 1.0;
+    } else {
+      explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data;
+    }
 
-      rtb_v_des += explicitaccel_microaccel_B.a_0 *
-        explicitaccel_microaccel_B.a_0 * 0.1;
-      if (!(rtb_v_des <= 35.0)) {
-        rtb_v_des = 35.0;
-      }
-    } else if (explicitaccel_microaccel_DW.no_initial_signal == 0.0) {
-      if (explicitaccel_microaccel_B.lead_vel <= 35.0) {
-        explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.lead_vel;
-      } else {
-        explicitaccel_microaccel_B.a_12 = 35.0;
-      }
+    explicitaccel_microaccel_B.a_0 = (explicitaccel_microaccel_B.a_vdes -
+      explicitaccel_microaccel_B.bsum) / explicitaccel_microaccel_B.a_12;
+    if ((explicitaccel_microaccel_B.a_0 <= 0.0) || rtIsNaN
+        (explicitaccel_microaccel_B.a_0)) {
+      explicitaccel_microaccel_B.a_0 = 0.0;
+    }
 
-      explicitaccel_microaccel_B.a_0 = 0.8 * explicitaccel_microaccel_B.a_12;
-      if ((rtb_v_des >= explicitaccel_microaccel_B.a_0) || rtIsNaN
-          (explicitaccel_microaccel_B.a_0)) {
-        explicitaccel_microaccel_B.a_0 = rtb_v_des;
-      }
-
-      rtb_v_des = 1.2 * explicitaccel_microaccel_B.lead_vel;
-      if ((explicitaccel_microaccel_B.a_0 <= rtb_v_des) || rtIsNaN(rtb_v_des)) {
-        rtb_v_des = explicitaccel_microaccel_B.a_0;
-      }
+    explicitaccel_microaccel_B.target_speed += explicitaccel_microaccel_B.a_0 *
+      explicitaccel_microaccel_B.a_0 * 0.1;
+    if (!(explicitaccel_microaccel_B.target_speed <= 35.0)) {
+      explicitaccel_microaccel_B.target_speed = 35.0;
     }
 
     if ((explicitaccel_microaccel_DW.prev_vels[2558] == 0.0) ||
@@ -429,7 +396,7 @@ void explicitaccel_microaccel_step(void)
       explicitaccel_microaccel_B.bsum = 30.0;
       if (rtIsNaN(explicitaccel_microaccel_B.lead_vel) ||
           (explicitaccel_microaccel_DW.no_initial_signal == 1.0)) {
-        rtb_v_des = 30.0;
+        explicitaccel_microaccel_B.target_speed = 30.0;
       }
     } else {
       if (rtIsNaN(explicitaccel_microaccel_DW.previous_dx)) {
@@ -594,7 +561,7 @@ void explicitaccel_microaccel_step(void)
     }
 
     explicitaccel_microaccel_B.a_vdes = -(explicitaccel_microaccel_B.In1.Data -
-      rtb_v_des);
+      explicitaccel_microaccel_B.target_speed);
     if (!(explicitaccel_microaccel_B.a_vdes >= -0.4)) {
       explicitaccel_microaccel_B.a_vdes = -0.4;
     }
@@ -766,13 +733,11 @@ void explicitaccel_microaccel_step(void)
     // End of Outputs for SubSystem: '<S1>/Publish3'
 
     // BusAssignment: '<S1>/Bus Assignment3'
-    explicitaccel_microaccel_B.BusAssignment3.Data =
-      explicitaccel_microaccel_B.a_vmax;
+    rtb_BusAssignment3.Data = explicitaccel_microaccel_B.a_vmax;
 
     // Outputs for Atomic SubSystem: '<S1>/Publish4'
     // MATLABSystem: '<S17>/SinkBlock'
-    Pub_explicitaccel_microaccel_611.publish
-      (&explicitaccel_microaccel_B.BusAssignment3);
+    Pub_explicitaccel_microaccel_611.publish(&rtb_BusAssignment3);
 
     // End of Outputs for SubSystem: '<S1>/Publish4'
 
@@ -795,7 +760,7 @@ void explicitaccel_microaccel_step(void)
     // End of Outputs for SubSystem: '<S1>/Publish7'
 
     // BusAssignment: '<S1>/Bus Assignment8'
-    rtb_BusAssignment8.Data = rtb_v_des;
+    rtb_BusAssignment8.Data = explicitaccel_microaccel_B.target_speed;
 
     // Outputs for Atomic SubSystem: '<S1>/Publish8'
     // MATLABSystem: '<S21>/SinkBlock'
@@ -1063,14 +1028,6 @@ void explicitaccel_microaccel_initialize(void)
     // End of SystemInitialize for SubSystem: '<S1>/Subscribe6'
 
     // SystemInitialize for Atomic SubSystem: '<S1>/Subscribe'
-    // SystemInitialize for Enabled SubSystem: '<S23>/Enabled Subsystem'
-    // SystemInitialize for SignalConversion generated from: '<S27>/In1' incorporates:
-    //   Outport: '<S27>/Out1'
-
-    explicitaccel_microaccel_B.In1_b = explicitaccel_microaccel_P.Out1_Y0;
-
-    // End of SystemInitialize for SubSystem: '<S23>/Enabled Subsystem'
-
     // Start for MATLABSystem: '<S23>/SourceBlock'
     explicitaccel_microaccel_DW.obj_ep.matlabCodegenIsDeleted = false;
     explicitaccel_microaccel_DW.obj_ep.isInitialized = 1;
