@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.76
+// Model version                  : 6.87
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Tue Nov 15 04:55:47 2022
+// C/C++ source code generated on : Tue Nov 15 12:46:42 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -368,6 +368,14 @@ void explicitaccel_microaccel_step(void)
         explicitaccel_microaccel_B.Subtract1 = rtb_v_des / static_cast<real_T>
           (t_length);
       }
+
+      if (!(explicitaccel_microaccel_B.Subtract1 >= 8.0)) {
+        explicitaccel_microaccel_B.Subtract1 = 8.0;
+      }
+
+      if (!(explicitaccel_microaccel_B.Subtract1 <= 30.0)) {
+        explicitaccel_microaccel_B.Subtract1 = 30.0;
+      }
     } else if (explicitaccel_microaccel_DW.no_initial_signal == 0.0) {
       if (explicitaccel_microaccel_B.th <= 35.0) {
         explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.th;
@@ -375,7 +383,7 @@ void explicitaccel_microaccel_step(void)
         explicitaccel_microaccel_B.a_12 = 35.0;
       }
 
-      explicitaccel_microaccel_B.a_0 = 0.8 * explicitaccel_microaccel_B.a_12;
+      explicitaccel_microaccel_B.a_0 = 0.7 * explicitaccel_microaccel_B.a_12;
       if ((!(explicitaccel_microaccel_B.Subtract1 >=
              explicitaccel_microaccel_B.a_0)) && (!rtIsNaN
            (explicitaccel_microaccel_B.a_0))) {
@@ -401,7 +409,7 @@ void explicitaccel_microaccel_step(void)
         ((explicitaccel_microaccel_B.a_vdes == 252.0) &&
          (explicitaccel_microaccel_DW.previous_dx > 220.0)) ||
         (explicitaccel_microaccel_DW.no_initial_signal == 1.0)) {
-      explicitaccel_microaccel_B.a_0 = 1.0;
+      explicitaccel_microaccel_B.a_0 = 0.8;
       explicitaccel_microaccel_B.v_max_dot = 0.0;
       explicitaccel_microaccel_B.bsum = 30.0;
       if (rtIsNaN(explicitaccel_microaccel_B.th) ||
@@ -414,9 +422,9 @@ void explicitaccel_microaccel_step(void)
           explicitaccel_microaccel_B.a_vdes;
       }
 
-      if (explicitaccel_microaccel_B.a_vdes - 18.0 >= 0.0) {
+      if (explicitaccel_microaccel_B.a_vdes - 13.0 >= 0.0) {
         explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes -
-          18.0;
+          13.0;
       } else {
         explicitaccel_microaccel_B.a_12 = 0.0;
       }
@@ -478,12 +486,12 @@ void explicitaccel_microaccel_step(void)
         explicitaccel_microaccel_B.a_0 = explicitaccel_microaccel_B.lead_acc_avg
           * explicitaccel_microaccel_B.In1.Data / (explicitaccel_microaccel_B.th
           + 0.001);
-        if ((explicitaccel_microaccel_B.a_vdes - 18.0 <= 0.0) || rtIsNaN
-            (explicitaccel_microaccel_B.a_vdes - 18.0)) {
+        if ((explicitaccel_microaccel_B.a_vdes - 13.0 <= 0.0) || rtIsNaN
+            (explicitaccel_microaccel_B.a_vdes - 13.0)) {
           explicitaccel_microaccel_B.a_12 = 0.0;
         } else {
           explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes -
-            18.0;
+            13.0;
         }
 
         explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.In1.Data *
@@ -498,9 +506,9 @@ void explicitaccel_microaccel_step(void)
                      explicitaccel_microaccel_B.In1.Data)) {
           explicitaccel_microaccel_B.a_0 = explicitaccel_microaccel_B.th -
             explicitaccel_microaccel_B.In1.Data;
-          if (explicitaccel_microaccel_B.a_vdes - 18.0 >= 0.001) {
+          if (explicitaccel_microaccel_B.a_vdes - 13.0 >= 0.001) {
             explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes
-              - 18.0;
+              - 13.0;
           } else {
             explicitaccel_microaccel_B.a_12 = 0.001;
           }
@@ -520,9 +528,9 @@ void explicitaccel_microaccel_step(void)
             explicitaccel_microaccel_B.a_0 = 0.0;
           }
 
-          if (explicitaccel_microaccel_B.a_vdes - 18.0 >= 0.001) {
+          if (explicitaccel_microaccel_B.a_vdes - 13.0 >= 0.001) {
             explicitaccel_microaccel_B.a_12 = explicitaccel_microaccel_B.a_vdes
-              - 18.0;
+              - 13.0;
           } else {
             explicitaccel_microaccel_B.a_12 = 0.001;
           }
@@ -536,9 +544,9 @@ void explicitaccel_microaccel_step(void)
             explicitaccel_microaccel_B.In1.Data) *
             explicitaccel_microaccel_B.lead_acc_avg +
             explicitaccel_microaccel_B.lead_acc_avg;
-          if ((explicitaccel_microaccel_B.a_0 >= 1.0) || rtIsNaN
+          if ((explicitaccel_microaccel_B.a_0 >= 0.8) || rtIsNaN
               (explicitaccel_microaccel_B.a_0)) {
-            explicitaccel_microaccel_B.a_0 = 1.0;
+            explicitaccel_microaccel_B.a_0 = 0.8;
           }
         }
       } else {
@@ -592,8 +600,8 @@ void explicitaccel_microaccel_step(void)
       explicitaccel_microaccel_B.accel = -3.0;
     }
 
-    if (!(explicitaccel_microaccel_B.accel <= 1.0)) {
-      explicitaccel_microaccel_B.accel = 1.0;
+    if (!(explicitaccel_microaccel_B.accel <= 0.8)) {
+      explicitaccel_microaccel_B.accel = 0.8;
     }
 
     explicitaccel_microaccel_DW.previous_target_speed =
