@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.98
+// Model version                  : 6.99
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Thu Nov 17 12:23:17 2022
+// C/C++ source code generated on : Thu Nov 17 12:38:15 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -179,19 +179,18 @@ struct B_explicitaccel_microaccel_T {
   real_T Switch;                       // '<S1>/Switch'
   real_T accel;                        // '<S1>/MATLAB Function'
   real_T a_vmax;                       // '<S1>/MATLAB Function'
+  real_T lead_vel;
   real_T v_max_dot;
   real_T lead_acc_avg;
   real_T a_0;
   real_T a_12;
   real_T bsum;
-  real_T th;
+  real_T difference;
   real_T alpha;
-  real_T Subtract1;                    // '<S1>/Subtract1'
   real_T a_vdes;                       // '<S1>/MATLAB Function'
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 In1;// '<S30>/In1'
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 In1_i;// '<S29>/In1'
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 In1_n;// '<S28>/In1'
-  SL_Bus_explicitaccel_microaccel_std_msgs_Float64 In1_b;// '<S27>/In1'
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 b_varargout_2;
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 BusAssignment5;// '<S1>/Bus Assignment5' 
   SL_Bus_explicitaccel_microaccel_std_msgs_Float64 BusAssignment2;// '<S1>/Bus Assignment2' 
