@@ -7,9 +7,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.97
+// Model version                  : 6.98
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Wed Nov 16 11:27:48 2022
+// C/C++ source code generated on : Thu Nov 17 12:23:17 2022
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Generic->Unspecified (assume 32-bit Generic)
@@ -369,8 +369,8 @@ void explicitaccel_microaccel_step(void)
           (t_length);
       }
 
-      if (!(explicitaccel_microaccel_B.Subtract1 >= 2.0)) {
-        explicitaccel_microaccel_B.Subtract1 = 2.0;
+      if (!(explicitaccel_microaccel_B.Subtract1 >= 8.0)) {
+        explicitaccel_microaccel_B.Subtract1 = 8.0;
       }
 
       if (!(explicitaccel_microaccel_B.Subtract1 <= 30.0)) {
