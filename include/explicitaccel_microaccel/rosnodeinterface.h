@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'explicitaccel_microaccel'.
 //
-// Model version                  : 6.101
+// Model version                  : 6.99
 // Simulink Coder version         : 9.8 (R2022b) 13-May-2022
-// C/C++ source code generated on : Thu Nov 17 15:28:18 2022
+// C/C++ source code generated on : Thu Nov 17 12:38:18 2022
 //
 
 #ifndef _ROS_MATLAB_NODEINTERFACE_
